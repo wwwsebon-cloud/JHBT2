@@ -1,0 +1,143 @@
+"""지후배틀 2 업데이트 인포그래픽 (디스코드 공지용) — JSON → HTML.
+
+사용법:  python infographics/make.py infographics/0.10.0.json   →  infographics/0.10.0.html
+         python infographics/shot.py infographics/0.10.0.html   →  infographics/0.10.0.png
+
+JSON 형식
+{
+  "version": "0.10.0", "date": "2026.10.22", "title": "손맛 업데이트", "subtitle": "한 줄 설명",
+  "headline": [ { "icon": "✦", "title": "...", "desc": "..." }, ... ]          ← 크게 보여 줄 3개
+  "sections": [
+    { "kind": "new" | "balance" | "change" | "fix", "label": "새 기능",
+      "items": [ { "icon": "✦" | "id": "fire", "title": "...", "lines": ["...", ...] } ] },
+    { "kind": "balance", "label": "밸런스",
+      "stats": [ { "id": "ice", "stat": "공격력", "from": 33, "to": 70, "unit": "" } ] }
+  ]
+}
+"""
+import html
+import json
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+PORTRAITS = json.load(open(os.path.join(HERE, 'portraits.json'), encoding='utf-8'))
+NAMES = {'fire': '화염 지후', 'ice': '얼음 지후', 'sword': '검 지후', 'assassin': '암살 지후', 'shield': '쉴드 지후'}
+KIND = {'new': ('NEW', '#111', '#f2f2f0'), 'balance': ('BALANCE', '#e5322d', '#fff'), 'change': ('CHANGE', '#555', '#fff'), 'fix': ('FIX', '#8f8f8c', '#fff')}
+e = html.escape
+
+CSS = r"""
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+* { box-sizing:border-box; margin:0; }
+body { width:1080px; background:#f4f4f2; font-family:'Pretendard Variable', Pretendard, sans-serif; color:#111; -webkit-font-smoothing:antialiased; }
+.mono { font-family:ui-monospace, Consolas, monospace; }
+.disp { font-family:'Arial Black', 'Pretendard Variable', sans-serif; letter-spacing:-.05em; }
+/* 상단: 검은 띠 · 큰 버전 번호 · 격자 */
+.hero { position:relative; background:#0f0f0e; color:#f2f2f0; padding:56px 64px 120px; overflow:hidden;
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 88px); }
+.hero .top { display:flex; align-items:center; gap:14px; font:800 13px ui-monospace, Consolas, monospace; letter-spacing:.32em; color:#8f8f8c; }
+.hero .top .pill { border:1px solid #444; border-radius:999px; padding:6px 14px; letter-spacing:.2em; color:#f2f2f0; }
+.hero .top .sp { flex:1; }
+.hero .ver { margin-top:36px; font:900 168px 'Arial Black', 'Pretendard Variable', sans-serif; letter-spacing:-.07em; line-height:.85; }
+.hero .ver small { font-size:56px; letter-spacing:-.04em; color:#8f8f8c; margin-right:10px; }
+.hero h1 { margin-top:26px; font:900 58px 'Pretendard Variable', sans-serif; letter-spacing:-.04em; }
+.hero p { margin-top:12px; font-size:22px; color:#bdbdba; }
+.hero .chars { position:absolute; right:56px; top:150px; display:flex; }
+.hero .chars span { width:96px; height:96px; border-radius:50%; overflow:hidden; border:3px solid #f2f2f0; background:#f2f2f0; margin-left:-22px; box-shadow:0 10px 24px rgba(0,0,0,.5); }
+.hero .chars img { width:100%; height:100%; object-fit:cover; }
+/* 헤드라인 3장: 검은 띠 위로 겹쳐 올라온다 */
+.heads { display:grid; grid-template-columns:repeat(3, 1fr); gap:18px; padding:0 64px; margin-top:-78px; position:relative; }
+.head { background:#fff; border:2px solid #111; border-radius:22px; padding:26px 24px 24px; box-shadow:8px 8px 0 #111; min-height:200px; display:flex; flex-direction:column; gap:10px; }
+.head .ic { width:56px; height:56px; border-radius:50%; background:#111; color:#f2f2f0; display:grid; place-items:center; font-size:26px; overflow:hidden; }
+.head .ic img { width:100%; height:100%; object-fit:cover; }
+.head b { font-size:25px; font-weight:900; letter-spacing:-.03em; line-height:1.25; }
+.head small { font-size:16px; color:#555; line-height:1.5; }
+/* 섹션: 왼쪽 세로 라벨 + 오른쪽 내용 */
+.sec { display:grid; grid-template-columns:120px 1fr; gap:0; margin:44px 64px 0; border-top:2px solid #111; }
+.sec .lab { padding-top:22px; }
+.sec .lab .k { display:inline-block; writing-mode:vertical-rl; transform:rotate(180deg); font:900 30px 'Arial Black', sans-serif; letter-spacing:.06em; color:var(--k); }
+.sec .lab .n { display:block; margin-top:12px; font:800 13px ui-monospace, Consolas, monospace; color:#8f8f8c; letter-spacing:.1em; }
+.sec .body { padding-top:22px; display:flex; flex-direction:column; gap:14px; }
+.sec h2 { font:900 30px 'Pretendard Variable', sans-serif; letter-spacing:-.04em; }
+.item { display:grid; grid-template-columns:64px 1fr; gap:18px; align-items:start; background:#fff; border:1px solid #d9d9d6; border-radius:18px; padding:18px 20px; }
+.item .ic { width:64px; height:64px; border-radius:16px; background:#111; color:#f2f2f0; display:grid; place-items:center; font-size:28px; overflow:hidden; }
+.item .ic.p { border-radius:50%; background:#f2f2f0; border:2px solid #111; }
+.item .ic img { width:100%; height:100%; object-fit:cover; }
+.item b { display:block; font-size:22px; font-weight:900; letter-spacing:-.03em; margin-top:2px; }
+.item ul { list-style:none; padding:0; margin-top:6px; display:flex; flex-direction:column; gap:4px; }
+.item li { font-size:17px; color:#444; line-height:1.5; padding-left:18px; position:relative; }
+.item li::before { content:''; position:absolute; left:2px; top:11px; width:7px; height:7px; border-radius:2px; background:#111; }
+/* 밸런스: 이전 → 이후 막대 */
+.stat { display:grid; grid-template-columns:64px 170px 1fr 150px; gap:16px; align-items:center; background:#fff; border:1px solid #d9d9d6; border-radius:18px; padding:14px 20px; }
+.stat .pic { width:58px; height:58px; border-radius:50%; overflow:hidden; border:2px solid #111; background:#f2f2f0; }
+.stat .pic img { width:100%; height:100%; object-fit:cover; }
+.stat .nm b { display:block; font-size:20px; font-weight:900; } .stat .nm small { font:800 13px ui-monospace, Consolas, monospace; color:#8f8f8c; letter-spacing:.08em; }
+.stat .bars { display:flex; flex-direction:column; gap:6px; }
+.stat .bar { height:12px; border-radius:12px; background:#ecece9; overflow:hidden; }
+.stat .bar i { display:block; height:100%; border-radius:12px; }
+.stat .bar.old i { background:#bdbdba; } .stat .bar.new i { background:#111; } .stat.down .bar.new i { background:#e5322d; }
+.stat .val { text-align:right; font:900 30px ui-monospace, Consolas, monospace; letter-spacing:-.02em; }
+.stat .val s { font-size:18px; color:#8f8f8c; margin-right:6px; } .stat .val em { font-style:normal; display:block; font-size:13px; letter-spacing:.12em; color:#111; }
+.stat.down .val em { color:#e5322d; }
+/* 바닥 */
+.foot { margin:54px 0 0; background:#0f0f0e; color:#8f8f8c; padding:30px 64px; display:flex; align-items:center; font:800 14px ui-monospace, Consolas, monospace; letter-spacing:.24em; }
+.foot b { color:#f2f2f0; font:900 26px 'Arial Black', sans-serif; letter-spacing:-.04em; margin-right:18px; }
+.foot .sp { flex:1; }
+"""
+
+
+def pic(id_):
+    return f'<img src="{PORTRAITS[id_]}" alt="">' if id_ in PORTRAITS else ''
+
+
+def icon(it, cls='ic'):
+    if it.get('id'):
+        return f'<span class="{cls} p">{pic(it["id"])}</span>'
+    return f'<span class="{cls}">{e(it.get("icon", "✦"))}</span>'
+
+
+def section(sec, idx):
+    k, color, _ = KIND.get(sec['kind'], KIND['new'])
+    rows = []
+    for it in sec.get('items', []):
+        lines = ''.join(f'<li>{e(l)}</li>' for l in it.get('lines', []))
+        rows.append(f'<div class="item">{icon(it)}<div><b>{e(it["title"])}</b><ul>{lines}</ul></div></div>')
+    for st in sec.get('stats', []):
+        a, b = float(st['from']), float(st['to'])
+        mx = max(a, b) * 1.08 or 1
+        down = b < a
+        unit = st.get('unit', '')
+        fmt = lambda v: (f'{v:g}' if isinstance(v, float) else str(v))
+        tag = '하향' if down else '상향'
+        rows.append(f'''<div class="stat{' down' if down else ''}"><span class="pic">{pic(st['id'])}</span>
+          <span class="nm"><b>{e(NAMES.get(st['id'], st['id']))}</b><small>{e(st['stat'])}</small></span>
+          <span class="bars"><span class="bar old"><i style="width:{a / mx * 100:.1f}%"></i></span><span class="bar new"><i style="width:{b / mx * 100:.1f}%"></i></span></span>
+          <span class="val"><s>{fmt(a)}{unit}</s>{fmt(b)}{unit}<em>{tag}</em></span></div>''')
+    return f'''<div class="sec" style="--k:{color}"><div class="lab"><span class="k">{k}</span><span class="n">{idx:02d}</span></div>
+      <div class="body"><h2>{e(sec['label'])}</h2>{''.join(rows)}</div></div>'''
+
+
+def build(d):
+    chars = ''.join(f'<span>{pic(i)}</span>' for i in d.get('chars', ['fire', 'ice', 'sword', 'assassin', 'shield']))
+    heads = ''.join(f'<div class="head">{icon(h)}<b>{e(h["title"])}</b><small>{e(h["desc"])}</small></div>' for h in d['headline'])
+    secs = ''.join(section(s, i + 1) for i, s in enumerate(d['sections']))
+    major, _, rest = d['version'].partition('.')
+    return f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><style>{CSS}</style></head><body>
+  <div class="hero"><div class="top"><span>JIHOO BATTLE 2</span><span class="pill">BETA UPDATE</span><span class="sp"></span><span>{e(d['date'])}</span></div>
+    <div class="ver"><small>v</small>{e(d['version'])}</div><h1>{e(d['title'])}</h1><p>{e(d['subtitle'])}</p><div class="chars">{chars}</div></div>
+  <div class="heads">{heads}</div>
+  {secs}
+  <div class="foot"><b>지후배틀 2</b><span>BETA · v{e(d['version'])}</span><span class="sp"></span><span>{e(d['date'])}</span></div>
+</body></html>'''
+
+
+def main():
+    src = sys.argv[1]
+    d = json.load(open(src, encoding='utf-8'))
+    out = os.path.splitext(src)[0] + '.html'
+    open(out, 'w', encoding='utf-8').write(build(d))
+    print(out)
+
+
+if __name__ == '__main__':
+    main()

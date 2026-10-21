@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="2.2"><meta name="jhbt2-build" content="1"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="2.2"><meta name="jhbt2-build" content="2"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -179,6 +179,8 @@ a { color:inherit; }
 #field.cinematic { transition:transform 2s cubic-bezier(.12,.72,.18,1); }
 /* 사거리 원 (전작: 지후를 누르면 사거리를 점선 원으로) */
 .unit-range-ring { position:absolute; border-radius:50%; border:2px dashed rgba(30,30,30,.7); background:rgba(90,150,255,.06); transform:translate(-50%,-50%); pointer-events:none; z-index:3; }
+.unit-range-ring.moon-ring { z-index:2; background:rgba(90,169,255,.05); border-color:rgba(60,120,220,.75); }
+.unit-range-ring.moon-ring.enemy { border-color:rgba(200,40,40,.75); background:rgba(255,80,80,.05); }
 .unit-range-ring.enemy { border-color:rgba(200,40,40,.75); background:rgba(255,80,80,.06); }
 /* 마지막 순간 (전작 final moment) */
 .final-moment-overlay { position:absolute; inset:0; z-index:35; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:clamp(28px,9vh,80px); gap:9px; pointer-events:none; opacity:0; visibility:hidden; color:#fff; text-align:center; background:rgba(0,0,0,.32); transition:opacity .2s; }
@@ -1005,8 +1007,10 @@ const CHARS = {
   moon: { name: '달 지후', rarity: 'legend', role: '서포터', hp: 1550, atk: 35, atkSpeed: 2.4, range: 6, speed: 1.6, deployLimit: 1, portrait: PORTRAITS.moon, sfx: 'ice', color: '#5aa9ff',
     story: '',
     passive: '<b>출격제한 1</b>. 반경 <b>5칸</b> 안의 모든 아군(자신 포함)에게 공격력 <b>+8%</b> · 공격속도 <b>+12%</b>. 공격할 때마다 두 버프가 각각 <b>2%p</b>씩 오른다 (각 최대 100%).',
+    onStart(u) { u.fx = u.fx || []; const el = document.createElement('div'); el.className = 'unit-range-ring moon-ring' + (u.side === 'e' ? ' enemy' : ''); el.style.width = el.style.height = (10 * CFG.CELL) + 'px'; $('field').appendChild(el); u.fx.push(el); u.moonRing = el; },
     onAttack(u) { u.moonN = (u.moonN || 0) + 1; },
     tick(u, dt, A) { const n = u.moonN || 0, m = effMult(u.lv), atk = Math.min(1, 0.08 * m + 0.02 * n), aspd = Math.min(1, 0.12 * m + 0.02 * n), R = 5 * CFG.CELL;
+      if (u.moonRing) { u.moonRing.style.left = u.x.toFixed(1) + 'px'; u.moonRing.style.top = u.y.toFixed(1) + 'px'; } // 효과 범위(반경 5칸) 점선 원
       A.allies(u).forEach(a => { if (dist(a, u) <= R + unitRadius(a)) A.buff(a, 'moon', { atk, aspd }, 0.25); }); } },
   levelup: { name: '레벨업 지후', rarity: 'epic', role: '딜러', hp: 1250, atk: 175, atkSpeed: 2, range: 'melee', speed: 1.6, portrait: PORTRAITS.levelup, sfx: 'swing', color: '#f12c32',
     forms: [[1250, 175, 2], [1500, 225, 1.75], [1750, 275, 1.5]], portraitLv: [PORTRAITS.levelup, PORTRAITS.levelup2, PORTRAITS.levelup3],
@@ -1482,6 +1486,7 @@ const A = {
   cross: u => friends(u).filter(a => a !== u && a.tile != null && u.tile != null && Math.abs(Math.floor(a.tile / CFG.COLS) - Math.floor(u.tile / CFG.COLS)) + Math.abs(a.tile % CFG.COLS - u.tile % CFG.COLS) === 1), // 십자 (앞뒤좌우 칸)
   alone: u => { if (u.tile == null) return false; const r = Math.floor(u.tile / CFG.COLS), c = u.tile % CFG.COLS; for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) { if (!dr && !dc) continue; const rr = r + dr, cc = c + dc; if (rr < 0 || cc < 0 || rr >= CFG.ROWS || cc >= CFG.COLS) continue; if (S.place[u.side][rr * CFG.COLS + cc]) return false; } return true; }, // 인접 8칸이 비었나
   transform: (u, id) => { // 선물 지후: 다른 지후로 변한다 (같은 레벨 · 체력 가득 · 같은 자리)
+    const slot = u.tile != null && S.place && S.place[u.side][u.tile]; if (slot && slot.id === u.id) slot.id = id; // 배치 기록도 바꿔서 다음 라운드부터 계속 변신한 지후로 나온다
     const n = makeUnit(u.side, id, u.lv, u.x, u.y), old = u.el, keep = { uid: u.uid, tile: u.tile, x: u.x, y: u.y, xPrev: u.x, yPrev: u.y, _sidestep: u._sidestep };
     clearTelegraph(u); (u.fx || []).forEach(e => e.remove());
     Object.keys(u).forEach(k => delete u[k]); Object.assign(u, n, keep);

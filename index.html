@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="2.1"><meta name="jhbt2-build" content="1"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="2.1"><meta name="jhbt2-build" content="2"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -425,8 +425,9 @@ input.text::placeholder { color:#555; }
 /* 캐릭터 상세 */
 .modal { position:fixed; inset:0; z-index:70; background:rgba(15,15,14,.6); backdrop-filter:blur(4px); display:none; place-items:center; padding:16px; }
 .modal.show { display:grid; }
-.modal .box { background:var(--bg); border-radius:16px; max-width:420px; width:100%; overflow:hidden; animation:rise .3s backwards; }
-.cdp { max-height:88vh; overflow:auto; position:relative; }
+.modal .box { background:var(--bg); border-radius:16px; max-width:420px; width:100%; max-height:calc(100vh - 32px); max-height:calc(100dvh - 32px); overflow:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; animation:rise .3s backwards; }
+.cdp { position:relative; }
+.cdp .cdp-act { position:sticky; bottom:0; margin:-4px -18px -18px; padding:10px 18px 18px; background:var(--bg); box-shadow:0 -10px 14px -6px var(--bg); } /* 모바일에서 스크롤하지 않아도 장착 버튼이 보이게 */
 .cdp-hero { position:relative; background:var(--dark) radial-gradient(circle at 50% 42%,rgba(255,255,255,.14),transparent 60%); color:var(--paper); display:flex; flex-direction:column; align-items:center; gap:10px; padding:34px 18px 22px; }
 .cdp .x { position:absolute; top:12px; right:12px; width:34px; height:34px; border-radius:50%; border:1px solid #444; background:transparent; color:var(--paper); }
 .cdp .no { position:absolute; top:20px; left:18px; }
@@ -463,11 +464,13 @@ input.text::placeholder { color:#555; }
 .odds .roster b { color:var(--paper); margin-right:4px; }
 .btn.line { justify-content:flex-start; padding:16px 18px; border-radius:14px; } .btn.line b { font-size:16px; font-weight:900; }
 /* 뽑기 연출 — ① 신호 색 (전설 금 · 영웅 보라 · 그 외 흰색) ② 카드 한 장씩 */
-#reveal { position:fixed; inset:0; z-index:80; background:var(--dark); color:var(--paper); display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; overflow:hidden; --sc:#f2f2f0; }
+#reveal { position:fixed; inset:0; z-index:80; background:var(--dark); color:var(--paper); display:none; flex-direction:column; align-items:center; justify-content:flex-start; padding:20px; overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain; --sc:#f2f2f0; }
 #reveal.show { display:flex; }
 #reveal.tier-epic { --sc:#b26bff; } #reveal.tier-legend { --sc:#ffc21a; }
 #reveal::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 46%, color-mix(in srgb, var(--sc) 24%, transparent), transparent 62%); pointer-events:none; }
-#revealStage { position:relative; display:flex; flex-direction:column; align-items:center; gap:24px; }
+#revealStage { position:relative; display:flex; flex-direction:column; align-items:center; gap:24px; margin:auto 0; } /* margin:auto — 남으면 가운데, 넘치면 위에서부터 스크롤 */
+#reveal::before { position:fixed; }
+
 .sig { display:flex; flex-direction:column; align-items:center; gap:30px; cursor:pointer; user-select:none; }
 .sig-wrap { position:relative; width:170px; height:236px; }
 .sig-rings i { position:absolute; left:50%; top:50%; width:200px; height:200px; margin:-100px 0 0 -100px; border-radius:50%; border:2px solid var(--sc); animation:sigRing 2.1s ease-out infinite; }
@@ -505,6 +508,13 @@ input.text::placeholder { color:#555; }
 .rcard .face .p img { width:100%; height:100%; object-fit:cover; }
 .rcard .face b { font-size:12px; font-weight:900; } .rcard .face small { font:800 9px var(--mono); opacity:.7; }
 .rcard .newtag { position:absolute; top:-8px; right:-8px; background:var(--red); color:#fff; font:900 9px var(--mono); padding:2px 7px; border-radius:999px; }
+@media (max-width:520px) {
+  #revealStage { gap:16px; }
+  .rcards { gap:8px; }
+  .rcard { width:76px; height:108px; }
+  .rcard .face .p { width:44px; height:44px; font-size:24px; }
+  .rcard .face b { font-size:10px; } .rcard .face small { font-size:8px; text-align:center; padding:0 4px; }
+}
 #cutscene { position:fixed; inset:0; z-index:90; background:#000; display:none; overflow:hidden; color:#fff; }
 #cutscene.show { display:block; }
 #cutscene .bars::before, #cutscene .bars::after { content:''; position:absolute; left:0; right:0; height:14vh; background:#000; z-index:3; }
@@ -1291,9 +1301,9 @@ function renderDeck() {
   $('deckRow').innerHTML = Array.from({ length: 5 }, (_, i) => { const id = profile.deck[i], c = id && CHARS[id];
     return `<div class="deckslot${id ? ' on' : ''}${pendingEquip ? ' swap' : ''}" data-slot="${i}"><span class="no">0${i + 1}</span><span class="pic">${id ? pic(id) : '+'}</span><b>${c ? c.name : '빈 슬롯'}</b><small>${c ? DOTS[c.rarity] : ''}</small></div>`; }).join('');
   $('deckCount').textContent = `${profile.deck.length} / 5`;
-  // 등급별 칸막이 — 전설부터, 칸막이는 그리드 한 줄을 통째로 차지한다
+  // 등급별 칸막이 — 일반부터, 칸막이는 그리드 한 줄을 통째로 차지한다
   let n = 0;
-  $('deckCards').innerHTML = Object.keys(RARITY).reverse().map(r => { const ids = Object.keys(CHARS).filter(id => CHARS[id].rarity === r);
+  $('deckCards').innerHTML = Object.keys(RARITY).map(r => { const ids = Object.keys(CHARS).filter(id => CHARS[id].rarity === r);
     if (!ids.length) return '';
     return `<div class="rdiv r-${r}"><b>${DOTS[r]} ${RARITY[r]}</b><span>${ids.filter(owned).length} / ${ids.length}</span></div>` + ids.map(id => { const c = CHARS[id]; return `<div class="ccard r-${c.rarity}${profile.deck.includes(id) ? ' sel' : ''}${owned(id) ? '' : ' locked'}" data-id="${id}" style="animation-delay:${(n++ * 0.03).toFixed(2)}s"><div class="pic">${pic(id)}</div><b>${c.name}</b><small>${DOTS[c.rarity]} ${RARITY[c.rarity]} · ${c.role}</small></div>`; }).join(''); }).join('');
   $('deckStatus').innerHTML = pendingEquip ? `<b>${CHARS[pendingEquip].name}</b> 장착 · 위에서 바꿀 자리를 고르세요. <button class="btn" id="eqCancel">취소</button>` : DECK_TIP;
@@ -1309,7 +1319,7 @@ function charDetail(id) {
       <div class="stats"><div>체력<b>${c.hp.toLocaleString()}</b></div><div>쉴드<b>${(c.shield || 0).toLocaleString()}</b></div><div>공격력<b>${c.noAttack ? '—' : c.atkText ? c.atkText() : c.atk}</b></div><div>공격 간격<b>${c.noAttack ? '—' : c.atkSpeed + '초'}</b></div><div>사거리<b>${rng}</b></div><div>이동속도<b>${c.speed || 1.6}</b></div></div>
       <div class="ability"><span class="eyebrow">능력</span>${ability}</div>
       ${c.story ? `<div><span class="eyebrow">서사</span><p class="story">${c.story}</p></div>` : ''}
-      <button class="btn primary big wide" id="cdpEquip" ${!have || equipped ? 'disabled' : ''}>${!have ? '미보유' : equipped ? '장착됨' : '장착'}</button>
+      <div class="cdp-act"><button class="btn primary big wide" id="cdpEquip" ${!have || equipped ? 'disabled' : ''}>${!have ? '미보유' : equipped ? '장착됨' : '장착'}</button></div>
     </div>`;
   $('charModal').classList.add('show');
   $('cdpClose').onclick = closeCharDetail;

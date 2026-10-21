@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="0.6.0"><meta name="jhbt2-build" content="0"><!-- 0.6.0 · 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="0.7.0"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -271,14 +271,35 @@ input.text::placeholder { color:#555; }
 .fieldwrap { position:relative; width:calc(100% - 36px); max-width:1100px; margin:10px auto 0; }
 #field { position:relative; transform-origin:0 0; background:#fff repeating-linear-gradient(90deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px), repeating-linear-gradient(0deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px); border:1px solid #111; border-radius:14px; overflow:hidden; }
 #field::after { content:''; position:absolute; left:50%; top:0; bottom:0; border-left:2px dashed rgba(0,0,0,.22); }
+#field.ns::after { left:0; right:0; top:50%; bottom:auto; border-left:0; border-top:2px dashed rgba(0,0,0,.22); }
 #field .tile { position:absolute; width:120px; height:120px; box-sizing:border-box; border:1px dashed rgba(0,0,0,.2); border-radius:14px; background:rgba(0,0,0,.015); transition:background-color .15s, border-color .15s; }
 #field .tile.enemy { background:transparent; border-color:rgba(0,0,0,.1); }
 #field .tile.hot { background:rgba(17,17,17,.08); border:2px solid #111; }
 #field .tile.bad { background:rgba(229,50,45,.1); border:2px solid #e5322d; }
+#field .tile.sel { background:rgba(17,17,17,.12); border:2px dashed #111; }
+#field .rowlab { position:absolute; transform:translate(-50%,-50%); font:800 13px var(--mono); letter-spacing:.2em; color:rgba(0,0,0,.28); pointer-events:none; white-space:nowrap; }
+.unit.merge { box-shadow:0 0 0 4px #ffc21a, 0 0 22px 6px rgba(255,194,26,.8) !important; cursor:pointer; }
+.unit.movesel { box-shadow:0 0 0 4px #111, 0 0 0 8px #fff !important; }
+.unit.ally { cursor:pointer; }
+/* 배치 카드 (전작 배치 풀: 3장 중 1장) */
+.pool { flex:1; min-width:260px; display:flex; align-items:stretch; gap:10px; min-height:96px; padding:8px; border:1px solid #e1e1de; border-radius:14px; background:#fff; overflow-x:auto; }
+.pcard { flex:1; min-width:96px; max-width:180px; display:flex; align-items:center; gap:10px; padding:10px; border:1px solid #111; border-radius:12px; background:#fff; cursor:pointer; position:relative; animation:rise .25s backwards; transition:transform .12s, box-shadow .12s; }
+.pcard:hover { transform:translateY(-2px); }
+.pcard.on { background:#111; color:#fff; box-shadow:0 0 0 3px #ffc21a; }
+.pcard.dead { opacity:.35; cursor:not-allowed; }
+.pcard.picked { opacity:.25; pointer-events:none; }
+.pcard .pp { width:52px; height:52px; flex:none; border-radius:50%; overflow:hidden; border:1.5px solid currentColor; display:grid; place-items:center; font-size:24px; background:#f2f2f0; }
+.pcard .pp img { width:100%; height:100%; object-fit:cover; }
+.pcard b { display:block; font-size:13px; font-weight:900; white-space:nowrap; }
+.pcard small { display:block; font:700 10px var(--mono); opacity:.65; white-space:nowrap; }
+.pcard .mg { position:absolute; top:-8px; right:-6px; background:#ffc21a; color:#111; font:900 10px var(--mono); border-radius:999px; padding:2px 7px; border:1.5px solid #111; }
+.odds { font:800 11px var(--mono); color:#666; white-space:nowrap; }
+.odds b { color:#111; }
+#btnSpeed.on { background:#111; color:#fff; }
 /* 유닛 — 전작 JHBT 의 .unit 구조 그대로 · 흑백 (적은 빨간 테두리) */
-.unit { position:absolute; width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; border:3px solid #111; background:#fff; box-shadow:0 0 0 3px #fff, 0 8px 16px -6px rgba(0,0,0,.45); transform:translate(-50%,-50%); transition:filter .15s ease, width .25s ease, height .25s ease; will-change:left, top; z-index:5; user-select:none; }
+.unit { position:absolute; width:74px; height:74px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; border:3px solid #111; background:#fff; box-shadow:0 0 0 3px #fff, 0 8px 16px -6px rgba(0,0,0,.45); transform:translate(-50%,-50%); transition:filter .15s ease, width .25s ease, height .25s ease; will-change:left, top; z-index:5; user-select:none; }
 .unit.enemy { border-color:#e5322d; }
-.unit.lvl2 { width:96px; height:96px; } .unit.lvl3 { width:102px; height:102px; } .unit.lvl4 { width:108px; height:108px; } .unit.lvl5 { width:114px; height:114px; }
+.unit.lvl2 { width:80px; height:80px; } .unit.lvl3 { width:86px; height:86px; } .unit.lvl4 { width:92px; height:92px; } .unit.lvl5 { width:98px; height:98px; } .unit.lvl6 { width:104px; height:104px; }
 .unit .unit-icon { position:absolute; inset:0; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; }
 .unit .unit-icon img { width:100%; height:100%; object-fit:cover; }
 .unit .unit-level { position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border-radius:50%; background:#111; color:#fff; font:900 11px var(--mono); display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:6; }
@@ -480,17 +501,16 @@ input.text::placeholder { color:#555; }
     <div class="mid"><span class="rd">ROUND <b id="hudRound">1</b></span><b class="timer" id="hudTimer">준비</b><span class="pill speedtag" id="hudSpeed" hidden>×2</span></div>
     <div class="side e"><div class="who"><span class="av" id="hudAvE">봇</span><div><b id="hudNickE">상대</b><div class="lives" id="hudLivesE"></div></div></div><div class="mini-deck" id="hudDeckE"></div></div>
   </div>
-  <div class="subhud"><span class="pill dark" id="hudCount">배치 0/6</span><span class="sp"></span><span class="phase" id="hudPhase"><i></i><span>배치 단계</span></span></div>
+  <div class="subhud"><span class="pill dark" id="hudCount">유닛 0/10</span><span class="odds" id="hudOdds" hidden></span><span class="sp"></span><span class="phase" id="hudPhase"><i></i><span>배치 단계</span></span></div>
   <div class="fieldwrap" id="fieldWrap"><div id="field"></div></div>
   <div class="dock">
-    <div class="hand" id="hand"></div>
+    <div class="pool" id="pool"></div>
     <div class="controls">
-      <button class="btn" id="btnSummon">소환 (<b id="summonLeft">4</b>)</button>
-      <button class="btn primary" id="btnReady">준비 완료 ▶</button>
+      <button class="btn" id="btnSpeed">⏩ 1×</button>
       <button class="btn" id="btnQuit">포기</button>
     </div>
   </div>
-  <div class="note" id="deployTip">지후를 끌어다 내 배치 칸(왼쪽 3x3)에 놓으세요 · 최대 6기 · 같은 지후 · 같은 레벨끼리 끌어 겹치면 합체</div>
+  <div class="note" id="deployTip"></div>
 </div>
 <!-- 결과 -->
 <div id="screen-result" class="screen">
@@ -531,14 +551,15 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // ═════════ CONFIG ═════════
 const CFG = {
-  CELL: 60, COLS: 3, ROWS: 3,              // 1칸 = 60px (전작과 같은 격자 · 사거리 단위) · 배치 구역은 진영마다 3x3
-  MAP_W: 1440, MAP_H: 840,                 // 전장 24x14 칸 (전작 전장처럼 넓게 · 배치 구역만 3x3)
-  TILE: 120, PITCH: 160, ZONE_GAP: 150,    // 배치 칸 크기 · 칸 사이 간격(중심 거리) · 가운데 선에서 앞줄 칸까지 거리 (px)
-  UNIT_R: 34,                              // 유닛 반지름 (전작 45px 격자 기준 · ×60/45 = 45px)
-  MAX_DEPLOY: 6,                           // 전장에 놓을 수 있는 최대 지후 수
-  LIVES: 4, MAX_LV: 5, LV_STEP: 0.2,       // 레벨마다 +20% (복리 아님)
-  SUMMON_FIRST: 4, SUMMON_PER_ROUND: 2, HAND_MAX: 8,
-  ROUND_TIME: 60, FAST_AFTER: 15,          // 15초 뒤 자동 2배속
+  CELL: 60,                                // 1칸 = 60px (전작 GRID) · 사거리 단위
+  COLS: 5, ROWS: 3,                        // 배치 칸: 진영마다 3줄(전열 · 중열 · 후열) × 5칸 (전작은 3 × 8)
+  DEPTH: [0.60, 0.72, 0.84], ACROSS: [0.1, 0.9], // 전작 V42 칸 위치 (전장 비율)
+  MAP_EW: [1760, 1120], MAP_NS: [1120, 1600],     // 전작 전장 크기 (가로 화면 · 세로 화면)
+  UNIT_R: 28,                              // 전작 유닛 반지름 (45px 격자 기준 · ×60/45)
+  MAX_UNITS: 10, SAME_LIMIT: 3, POOL: 3, PICK_TIME: 15, // 전작: 전장 최대 10기 · 같은 지후 3기 · 카드 3장 · 15초
+  LIVES: 4,                                // 전작은 3
+  MAX_LV: 7, LEVEL_MULT: 1.2, EFFECT_MULT: 1.1, // 전작: 겹쳐 레벨업 · 체력/공격력 ×1.2 · 효과 ×1.1 (복리)
+  ROUND_TIME: 45, STALL: 15, FAST_AFTER: 25, FAST_SPEED: 1.5, DM_DEPLOYS: 3, // 전작: 45초 · 15초 무피해 판정 · 25초 뒤 1.5배속 · 데스매치 배치 3번
   STEP: 1 / 60,                            // 전작 PHYS.STEP
   MELEE: 1.6,                              // 근접 사거리 1.6칸 (전작 72px/45px)
   GACHA: [['legend', 1], ['epic', 4], ['rare', 30], ['common', 65]],
@@ -563,22 +584,22 @@ const PORTRAITS = {
 // skill (선택): { type: 'hit'|'mana'|'cooldown', need/cd, pct, run(u, A) } — 스킬 피해는 일반 공격력의 %
 // 패시브 훅 (선택): onHit(u, t, A) · onStart(u, A) · tick(u, dt, A) · immune(u) · takenMult(u) · atkMult(u, t)
 const CHARS = {
-  fire: { name: '화염 지후', rarity: 'common', role: '딜러', hp: 3000, atk: 100, atkSpeed: 3, range: 2, speed: 1.6, portrait: PORTRAITS.fire, starter: true, color: '#ff6b35',
+  fire: { name: '화염 지후', rarity: 'common', role: '딜러', hp: 1000, atk: 35, atkSpeed: 3, range: 2, speed: 1.6, portrait: PORTRAITS.fire, starter: true, color: '#ff6b35',
     story: '삼겹살을 구워먹다가 부루스타가 폭주해서 전신 화상을 당한 지후입니다. 하지만 그의 불타오르는 삶의 의지와 열정은 곧 불씨로 되살아났어요. 특기는 가스라이팅.',
     passive: '일반 공격이 <b>5초</b> 동안 1초마다 공격력의 <b>110%</b> [화상] 피해를 입힌다. [화상]은 <b>중첩</b>된다.',
     onHit(u, t, A) { A.status(t, 'burn', 5, { dps: u.atk * 1.1, stack: true }); } },
-  ice: { name: '얼음 지후', rarity: 'common', role: '컨트롤러', hp: 2700, atk: 75, atkSpeed: 4, range: 3, speed: 1.6, portrait: PORTRAITS.ice, starter: true, color: '#4fc3f7',
+  ice: { name: '얼음 지후', rarity: 'common', role: '컨트롤러', hp: 900, atk: 25, atkSpeed: 4, range: 3, speed: 1.6, portrait: PORTRAITS.ice, starter: true, color: '#4fc3f7',
     story: '집에서 실수로 에어컨을 끄지 않고 잠을 자는 바람에 상시로 감기 상태입니다. 그는 격리 처리 당했고, 결국 그도 세상에 등을 돌리고 냉정해졌습니다.',
     passive: '일반 공격이 대상을 <b>1.6초</b> 동안 [빙결]시킨다.',
     onHit(u, t, A) { A.status(t, 'freeze', 1.6); } },
-  sword: { name: '검 지후', rarity: 'common', role: '딜러', hp: 3100, atk: 150, atkSpeed: 1.2, range: 'melee', speed: 1.6, portrait: PORTRAITS.sword, starter: true, color: '#8d8d8d',
+  sword: { name: '검 지후', rarity: 'common', role: '딜러', hp: 1030, atk: 50, atkSpeed: 1.2, range: 'melee', speed: 1.6, portrait: PORTRAITS.sword, starter: true, color: '#8d8d8d',
     story: '어릴때 놀이동산에서 기념품으로 사왔던 플라스틱 검으로 단련했습니다. 지금은 누구도 넘볼 수 없는 뛰어난 검객입니다.',
     passive: '' },
-  assassin: { name: '암살 지후', rarity: 'common', role: '어쌔신', hp: 2200, atk: 400, atkSpeed: 1.5, range: 'melee', speed: 1.6, portrait: PORTRAITS.assassin, starter: true, color: '#e84393',
+  assassin: { name: '암살 지후', rarity: 'common', role: '어쌔신', hp: 730, atk: 135, atkSpeed: 1.5, range: 'melee', speed: 1.6, portrait: PORTRAITS.assassin, starter: true, color: '#e84393',
     story: '남들처럼 평범한 갈색 머리로 염색을 하고싶었으나 미용사가 말을 잘못 알아들어 핑크색 머리로 염색해주자, 해당 미용실에 원한을 품고 미용사를 암살하기 위해 다시 태어났습니다.',
     passive: '게임 시작 <b>2초</b> 뒤 가장 멀리 있는 적의 <b>후방</b>으로 순간이동하고 <b>1초</b> 동안 [은신]. 순간이동 뒤 첫 공격은 <b>대상 하나</b>에게 공격력의 <b>400%</b>.',
     tick(u, dt, A) { if (u.blinked) return; u.blinkT = (u.blinkT || 0) + dt; if (u.blinkT >= 2) { u.blinked = true; A.blinkBehindFarthest(u); A.status(u, 'stealth', 1); u.nextHitPct = 400; u.nextHitSingle = true; } } },
-  shield: { name: '쉴드 지후', rarity: 'common', role: '탱커', hp: 3000, shield: 1500, atk: 350, atkSpeed: 3, range: 'melee', speed: 1.6, portrait: PORTRAITS.shield, portraitBroken: PORTRAITS.shield_broken, starter: true, color: '#4f7cff',
+  shield: { name: '쉴드 지후', rarity: 'common', role: '탱커', hp: 1000, shield: 500, atk: 115, atkSpeed: 3, range: 'melee', speed: 1.6, portrait: PORTRAITS.shield, portraitBroken: PORTRAITS.shield_broken, starter: true, color: '#4f7cff',
     story: "자청해서 고기방패가 되기로 한 지후입니다. 최근에는 그의 특별한 '취향'에 대해 루머가 돌고 있다고 하지만.. 쉴드 지후는 순수하게 마음씨가 착해서 그런거에요.",
     passive: '쉴드가 있는 동안 <b>모든 상태이상에 면역</b>이고 받는 피해 <b>-25%</b>.',
     immune(u) { return u.shield > 0; }, takenMult(u) { return u.shield > 0 ? 0.75 : 1; } },
@@ -734,13 +755,23 @@ $('deckCards').addEventListener('click', e => { const card = e.target.closest('.
 const S = { phase: 'idle' }; // 경기 상태
 let uidSeq = 0;
 const WS = CFG.CELL / 45; // 전작 WORLD_SCALE: 45px 격자 기준 수치 → 60px 격자
-const FW = () => CFG.MAP_W, FH = () => CFG.MAP_H;
-// 배치 칸 중심 (tile 0~8 · col 2 가 내 앞줄, 상대는 col 0 이 앞줄)
+// 전장 방향: 모바일 · PC 상관없이 항상 가로 전장 (나는 왼쪽 · 상대는 오른쪽). 세로 전장은 좌표 버그 때문에 쓰지 않는다
+function isEW() { return true; }
+const FW = () => (isEW() ? CFG.MAP_EW : CFG.MAP_NS)[0], FH = () => (isEW() ? CFG.MAP_EW : CFG.MAP_NS)[1];
+const TILES = CFG.COLS * CFG.ROWS;
+// 배치 칸 중심 (전작 v42TileCenter): tile = row * 5 + col · row 0 = 전열(가운데 쪽) · 나는 왼쪽(세로 화면은 아래)
 function tileXY(side, t) {
-  const col = t % 3, row = Math.floor(t / 3), T = CFG.TILE, cx = FW() / 2;
-  return { x: side === 'a' ? cx - CFG.ZONE_GAP - T / 2 - CFG.PITCH * (2 - col) : cx + CFG.ZONE_GAP + T / 2 + CFG.PITCH * col, y: FH() / 2 + (row - 1) * CFG.PITCH };
+  const col = t % CFG.COLS, row = Math.floor(t / CFG.COLS);
+  const across = CFG.ACROSS[0] + (col + 0.5) * (CFG.ACROSS[1] - CFG.ACROSS[0]) / CFG.COLS;
+  const depth = CFG.DEPTH[row];
+  return isEW() ? { x: FW() * (side === 'a' ? 1 - depth : depth), y: FH() * across } : { x: FW() * across, y: FH() * (side === 'a' ? depth : 1 - depth) };
 }
-function lvMult(lv) { return 1 + CFG.LV_STEP * (lv - 1); }
+function tileSize() { // 전작 v42BuildGrid 칸 크기
+  const tw = (CFG.ACROSS[1] - CFG.ACROSS[0]) * (isEW() ? FH() : FW()) / CFG.COLS - 8, th = (CFG.DEPTH[1] - CFG.DEPTH[0]) * (isEW() ? FW() : FH()) - 10;
+  return isEW() ? { w: th, h: tw } : { w: tw, h: th };
+}
+function lvMult(lv) { return Math.pow(CFG.LEVEL_MULT, lv - 1); }   // 체력 · 공격력 (전작 LEVEL_MULT 복리)
+function effMult(lv) { return Math.pow(CFG.EFFECT_MULT, lv - 1); } // 쉴드 등 효과 (전작 EFFECT_MULT)
 const PHYS = { STEP: 1 / 60, SKIN: 3.2, RESTITUTION: 0.045, FRICTION: 0.22, DRAG: 4.4, STEER: 16, WALL_PAD: 30, SOLVER_ITERS: 8, POS_CORR: 0.78, SLOP: 0.55 };
 function unitRadius(u) { return (CFG.UNIT_R + Math.max(0, ((u && u.lv) || 1) - 1) * 2) * WS; }
 function bodySeparation(a, b) { return unitRadius(a) + unitRadius(b) + 6 * WS; } // 원이 겹치지 않는 최소 중심 거리
@@ -751,7 +782,7 @@ function makeUnit(side, id, lv, x, y) {
   const c = CHARS[id], m = lvMult(lv);
   const melee = c.range === 'melee';
   const u = { uid: ++uidSeq, side, id, lv, x, y, alive: true, mult: m, melee, maxHp: Math.round(c.hp * m), atk: Math.round(c.atk * m), atkSpeed: c.atkSpeed, range: (melee ? CFG.MELEE : c.range) * CFG.CELL, speed: (c.speed || 1.6) * CFG.CELL,
-    maxShield: Math.round((c.shield || 0) * m), cd: c.atkSpeed, sk: 0, st: {}, def: c,
+    maxShield: Math.round((c.shield || 0) * effMult(lv)), cd: c.atkSpeed, dmgDealt: 0, sk: 0, st: {}, def: c,
     vx: 0, vy: 0, desVx: 0, desVy: 0, xPrev: x, yPrev: y, _sidestep: (uidSeq & 1) ? 1 : -1, _engaged: false, _outT: 0 };
   u.hp = u.maxHp; u.shield = u.maxShield; u.mass = physMass(u); u.invMass = 1 / u.mass;
   return u;
@@ -773,6 +804,7 @@ function dealDamage(src, t, amount, opts = {}) {
   const hadShield = t.shield > 0, abs = Math.min(t.shield, d); t.shield -= abs; const hpDmg = d - abs;
   if (hadShield && t.shield <= 0 && t.def.portraitBroken && t.el) { const img = t.el.querySelector('.unit-icon img'); if (img) img.src = t.def.portraitBroken; dmgNum(t, '쉴드 깨짐', { crit: true }); }
   t.hp -= hpDmg;
+  if (d > 0) { S.lastDmgAt = S.time; if (src) src.dmgDealt = (src.dmgDealt || 0) + d; }
   dmgNum(t, d, { critHit: opts.skill, dot: opts.dot });
   if (!opts.dot) { hitFlash(t, opts.skill); if (t.def.skill && t.def.skill.type === 'mana' && !t.st.silence) t.sk = Math.min(t.def.skill.need, t.sk + 6); }
   if (t.hp <= 0) { t.hp = 0; killUnit(t); }
@@ -805,8 +837,8 @@ const A = {
   blinkBehindFarthest: u => { // 가장 멀리 있는 적의 뒤(적 진영 끝 쪽)로 순간이동
     let far = null, fd = -1; targets(u).forEach(e => { const d = dist(u, e); if (d > fd) { fd = d; far = e; } });
     if (!far) return;
-    const dir = far.side === 'e' ? 1 : -1;
-    A.ring(u.x, u.y, 0.6); physSnap(u, far.x + dir * (bodySeparation(u, far) + 4), far.y); A.ring(u.x, u.y, 0.6); dmgNum(u, '순간이동', { crit: true });
+    const off = bodySeparation(u, far) + 4, ew = isEW(), dir = ew ? Math.sign(far.x - FW() / 2) || 1 : Math.sign(far.y - FH() / 2) || 1; // 적 진영 끝 쪽
+    A.ring(u.x, u.y, 0.6); physSnap(u, ew ? far.x + dir * off : far.x, ew ? far.y : far.y + dir * off); A.ring(u.x, u.y, 0.6); dmgNum(u, '순간이동', { crit: true });
   },
   pick: (list, n) => { const c = list.slice(), out = []; while (out.length < n && c.length) out.push(c.splice(Math.floor(rng() * c.length), 1)[0]); return out; },
   around: (u, x, y, cells, fn) => foes(u).filter(e => Math.hypot(e.x - x, e.y - y) <= cells * CFG.CELL + unitRadius(e)).forEach(fn),
@@ -1086,21 +1118,42 @@ function stepCombat(dt) {
   for (const u of S.units) physIntegrate(u, dt);
   resolveOverlaps();
   for (const u of S.units) if (u.alive) physWalls(u);
+  oddsSample();
   const a = S.units.some(u => u.alive && u.side === 'a'), e = S.units.some(u => u.alive && u.side === 'e');
-  if (!a || !e) return endRound(a ? 'a' : e ? 'e' : 'draw');
-  if (S.time >= CFG.ROUND_TIME) { const hp = s => S.units.filter(u => u.alive && u.side === s).reduce((t, u) => t + u.hp / u.maxHp, 0); const ha = hp('a'), he = hp('e'); return endRound(ha > he ? 'a' : he > ha ? 'e' : 'draw'); }
+  if (!a || !e) return endRound(a ? 'a' : e ? 'e' : 'draw', false);
+  const stall = S.time - (S.lastDmgAt || 0) >= CFG.STALL;
+  if (S.time >= CFG.ROUND_TIME - 1e-9 || stall) { const p = allyOdds(); S.stallEnded = stall && S.time < CFG.ROUND_TIME; return endRound(p > 50 ? 'a' : p < 50 ? 'e' : 'draw', true); } // 판정은 화면에 보이는 정수 승률 · 50:50 은 재경기
+}
+// 예상 우세 (전작 updateOddsBar): 남은 유효 체력 × 예상 초당 피해 (최근 3초 실제 피해 반영)
+function sideOdds(name) {
+  const m = S.units.filter(u => u.alive && u.side === name);
+  return { count: m.length, health: m.reduce((s, u) => s + Math.max(0, u.hp) + Math.max(0, u.shield || 0), 0), damage: S.units.filter(u => u.side === name).reduce((s, u) => s + (u.dmgDealt || 0), 0),
+    dps: m.reduce((s, u) => s + Math.max(0, effAtk(u)) / Math.max(0.2, u.atkSpeed || 3) * clamp(0.82 + u.range / (10 * CFG.CELL), 0.85, 1.2) * (u.st.freeze > 0 ? 0.35 : 1), 0) };
+}
+function oddsSample() {
+  const L = S.odds || (S.odds = []);
+  if (L.length && S.time - L[L.length - 1].time < 0.25) return;
+  L.push({ time: S.time, a: sideOdds('a').damage, e: sideOdds('e').damage });
+  while (L.length > 2 && L[0].time < S.time - 3) L.shift();
+}
+function allyOdds() {
+  const a = sideOdds('a'), e = sideOdds('e'), L = S.odds || [], first = L[0], last = L[L.length - 1], el = first && last ? last.time - first.time : 0;
+  const recent = (k, th) => el < 0.75 ? th : th * 0.55 + Math.min(Math.max(0, (last[k] - first[k]) / el), th * 4) * 0.45;
+  const ap = Math.max(0, a.health) * Math.max(1, recent('a', a.dps)), ep = Math.max(0, e.health) * Math.max(1, recent('e', e.dps));
+  const o = a.health <= 0 && e.health <= 0 ? 0.5 : e.health <= 0 ? 1 : a.health <= 0 ? 0 : ap + ep > 0 ? ap / (ap + ep) : 0.5;
+  return Math.round(o * 100);
 }
 let lastTs = 0, acc = 0;
 function loop(ts) {
   if (S.phase !== 'combat') return;
   const real = Math.min(0.1, (ts - (lastTs || ts)) / 1000); lastTs = ts;
-  const speed = S.time >= CFG.FAST_AFTER ? 2 : 1; // 15초 뒤 자동 2배속
-  $('hudSpeed').hidden = speed === 1;
-  acc += real * speed;
+  if (S.speed === 1 && !S.speedManual && S.time >= CFG.FAST_AFTER) { S.speed = CFG.FAST_SPEED; renderSpeedBtn(); banner('⏩ 1.5배속'); } // 전작: 전투가 길어지면 1.5배속
+  $('hudSpeed').hidden = S.speed === 1; $('hudSpeed').textContent = '×' + S.speed;
+  acc += real * S.speed;
   let n = 0; while (acc >= CFG.STEP && S.phase === 'combat' && n++ < 30) { acc -= CFG.STEP; stepCombat(CFG.STEP); }
   const alpha = clamp(acc / CFG.STEP, 0, 1); S.units.forEach(u => physSyncDom(u, alpha));
   $('hudTimer').textContent = Math.max(0, Math.ceil(CFG.ROUND_TIME - S.time)) + '초';
-  if (S.phase === 'combat') requestAnimationFrame(loop);
+  if (S.phase === 'combat') { const p = allyOdds(); $('hudOdds').hidden = false; $('hudOdds').innerHTML = `예상 우세 <b>${p}</b> : ${100 - p}`; requestAnimationFrame(loop); }
 }
 
 // ── 유닛 그리기 (전작 .unit 구조: 초상화 · 레벨 · 상태 아이콘 · 체력/쿨/쉴드 바) ──
@@ -1118,7 +1171,7 @@ function drawUnit(u) {
 }
 function unitEl(u) {
   const el = document.createElement('div'), sk = u.def.skill;
-  el.className = 'unit ' + (u.side === 'e' ? 'enemy' : 'ally') + (u.lv > 1 ? ' lvl' + u.lv : '') + (sk ? ' has-cd' : '') + (u.maxShield > 0 ? ' has-shield' : '');
+  el.className = 'unit ' + (u.side === 'e' ? 'enemy' : 'ally') + (u.lv > 1 ? ' lvl' + Math.min(u.lv, 6) : '') + (sk ? ' has-cd' : '') + (u.maxShield > 0 ? ' has-shield' : '');
   el.innerHTML = `<span class="unit-icon">${pic(u.id)}</span><span class="unit-level">${u.lv}</span><div class="status-icons"></div>`
     + `<div class="unit-hpbar-wrap"><div class="unit-hpbar-track"><div class="unit-hpbar"></div><span class="unit-hp-text">${u.maxHp}</span></div></div>`
     + (sk ? `<div class="unit-cdbar-wrap"><div class="unit-cdbar ${sk.type === 'cooldown' ? 'cd' : 'sk'}"></div></div>` : '')
@@ -1128,22 +1181,29 @@ function unitEl(u) {
 }
 function fitField() {
   const f = $('field'), W = FW() + 6, H = FH() + 6;
-  f.style.width = FW() + 'px'; f.style.height = FH() + 'px';
+  f.style.width = FW() + 'px'; f.style.height = FH() + 'px'; f.classList.toggle('ns', !isEW());
   const s = Math.max(0.25, Math.min(1, $('fieldWrap').clientWidth / W, (window.innerHeight - 290) / H));
   f.style.transform = `scale(${s})`; $('fieldWrap').style.height = (H * s) + 'px';
 }
 window.addEventListener('resize', () => { if (S.phase !== 'idle') fitField(); });
 
-// ═════════ 라운드 · 배치 ═════════
-// tiles[side][0..8] = [{ id, lv }] (한 칸에 한 기) · 전장에는 최대 CFG.MAX_DEPLOY 기
+// ═════════ 라운드 · 배치 (전작 일반전 규칙) ═════════
+// 라운드마다 배치 기회 2번 (3라운드부터 3번 · 양쪽 라이프 1이면 데스매치 3번). 기회마다 덱에서 카드 3장 → 1장을 골라
+// 빈 칸에 놓거나 같은 지후 위에 겹쳐 레벨업 (15초가 지나면 자동). 내가 하나 놓으면 상대도 하나.
+// 놓은 지후는 라운드가 끝나도 남고, 다음 라운드에 제자리에서 체력이 가득 찬 채로 다시 나온다.
+// place[side][tile] = { id, lv } | null (tile = row * 5 + col)
+const ROW_LABEL = ['전열', '중열', '후열'];
+const CENTER_OUT = [2, 1, 3, 0, 4]; // 가운데 칸부터 (전작 V42_CENTER_OUT 의 5칸판)
+const emptyPlace = () => Array.from({ length: TILES }, () => null);
 function newMatch() {
   const deck = profile.deck.filter(owned);
   if (deck.length < 1) { banner('덱을 먼저 설정하세요'); show('deck'); renderDeck(); return; }
   rng = mulberry32((Date.now() ^ 0x9e3779b9) >>> 0);
-  Object.assign(S, { phase: 'deploy', round: 1, lives: { a: CFG.LIVES, e: CFG.LIVES }, charges: { a: CFG.SUMMON_FIRST, e: CFG.SUMMON_FIRST }, hand: { a: [], e: [] }, tiles: { a: Array.from({ length: 9 }, () => []), e: Array.from({ length: 9 }, () => []) },
-    deck: { a: deck.slice(0, 5), e: botDeck() }, units: [], shots: [], time: 0,
+  Object.assign(S, { phase: 'intro', round: 1, lives: { a: CFG.LIVES, e: CFG.LIVES }, place: { a: emptyPlace(), e: emptyPlace() },
+    deck: { a: deck.slice(0, 5), e: botDeck() }, units: [], shots: [], time: 0, pool: [], pick: null, moveSel: null, speed: 1, speedManual: false,
     nick: { a: profile.nick || '나', e: BOT_NAMES[Math.floor(rng() * BOT_NAMES.length)] }, hist: [] });
-  show('battle'); renderIds(); startDeploy(); showIntro();
+  show('battle'); renderIds(); renderLives(); renderField(); renderPool(); showIntro();
+  clearTimeout(newMatch.t); newMatch.t = setTimeout(() => { if (S.phase === 'intro') startRound(); }, 3000);
 }
 // HUD: 양쪽 닉네임 · 덱 상시 표시
 function renderIds() {
@@ -1159,136 +1219,191 @@ function showIntro() {
   el.classList.add('show'); clearTimeout(showIntro.t); showIntro.t = setTimeout(() => { el.classList.remove('show'); el.innerHTML = ''; }, 3000);
 }
 function botDeck() { const ids = Object.keys(CHARS); return A.pick(ids, Math.min(5, ids.length)); }
-function summon(side) {
-  if (S.charges[side] <= 0 || S.hand[side].length >= CFG.HAND_MAX) return false;
-  S.charges[side]--;
-  const d = S.deck[side]; S.hand[side].push({ id: d[Math.floor(rng() * d.length)], lv: 1, k: ++uidSeq });
-  return true;
+// ── 배치 판정 (전작 canPlaceNew · mergeTargetFor · poolCardPlayable) ──
+function countSide(side) { return S.place[side].filter(Boolean).length; }
+function sameCount(side, id) { return S.place[side].filter(p => p && p.id === id).length; }
+function mergeTile(side, id) { const i = S.place[side].findIndex(p => p && p.id === id && p.lv < CFG.MAX_LV); return i < 0 ? null : i; }
+function canPlaceNew(side, id) { return countSide(side) < CFG.MAX_UNITS && sameCount(side, id) < CFG.SAME_LIMIT && S.place[side].some(p => !p); }
+function playable(side, id) { return mergeTile(side, id) != null || canPlaceNew(side, id); }
+function isDeathmatch() { return S.lives.a === 1 && S.lives.e === 1; }
+function deployChances() { return isDeathmatch() ? CFG.DM_DEPLOYS : S.round >= 3 ? 3 : 2; }
+function rollPool(side) { const d = S.deck[side]; return d.length ? Array.from({ length: CFG.POOL }, () => d[Math.floor(rng() * d.length)]) : []; } // 전작 일반전: 덱에서 매번 3장 (중복 가능)
+function roleRow(id) { const c = CHARS[id]; return c.role === '탱커' || c.role === '어쌔신' || (c.range === 'melee' && c.role === '딜러') ? 0 : c.role === '서포터' || c.role === '힐러' ? 2 : 1; } // 전작 botRoleBand
+function pickTile(side, preferRow) { // 전작 v42PickTile
+  const shuffle = a => a.map(v => ({ v, k: rng() })).sort((x, y) => x.k - y.k).map(o => o.v);
+  const rows = preferRow == null ? shuffle([0, 1, 2]) : [preferRow, ...[0, 1, 2].filter(r => r !== preferRow)];
+  for (const row of rows) {
+    const cols = preferRow == null ? shuffle(CENTER_OUT) : CENTER_OUT.map((c, i) => ({ c, k: rng() + i * 0.35 })).sort((x, y) => x.k - y.k).map(o => o.c);
+    for (const col of cols) { const t = row * CFG.COLS + col; if (!S.place[side][t]) return t; }
+  }
+  return null;
 }
-function startDeploy() {
-  S.phase = 'deploy'; S.units = []; S.shots = [];
-  $('hudRound').textContent = S.round; $('hudTimer').textContent = '준비'; $('hudSpeed').hidden = true; setPhase('배치 단계');
-  renderLives(); botDeploy(); renderField(); renderHand();
-  $('btnReady').disabled = false; $('btnSummon').disabled = false; $('deployTip').hidden = false;
+function placeAt(side, t, id) { S.place[side][t] = { id, lv: 1 }; }
+function levelUp(side, t) { const p = S.place[side][t]; if (p && p.lv < CFG.MAX_LV) p.lv++; return p; }
+// ── 라운드 ──
+function startRound() {
+  S.phase = 'deploy'; S.units = []; S.shots = []; S.odds = []; S.deployN = 0;
+  S.roundStart = { a: S.place.a.map(p => p && { ...p }), e: S.place.e.map(p => p && { ...p }) }; // 시간 종료 50:50 이면 이 배치로 다시
+  $('hudRound').textContent = S.round; $('hudSpeed').hidden = true; $('hudOdds').hidden = true; setPhase('배치 단계');
+  renderLives(); renderSpeedBtn();
+  if (isDeathmatch() && !S.dmShown) { S.dmShown = true; banner('☠ 데스매치'); }
+  else if (S.round === 3) banner('지금부터 라운드마다 배치 3번');
+  nextDeploy();
 }
-function setPhase(t) { $('hudPhase').lastElementChild.textContent = t; }
+function nextDeploy() {
+  S.deployN++;
+  if (S.deployN > deployChances()) return beginCombat();
+  S.phase = 'deploy'; S.pick = null; S.moveSel = null;
+  S.pool = rollPool('a');
+  let rerolls = 0; // 놓을 수 있는 카드가 하나도 없으면 3번까지 다시 뽑는다
+  while (S.pool.length && !S.pool.some(id => playable('a', id)) && rerolls < 3) { S.pool = rollPool('a'); rerolls++; }
+  renderField(); renderPool();
+  if (!S.pool.some(id => playable('a', id))) { tip('3번 리롤해도 배치할 수 있는 지후가 없어요. 이번 배치는 건너뜁니다.'); return finishDeploy(1300); }
+  if (rerolls) banner('리롤!');
+  tip();
+  startPickTimer();
+}
+function startPickTimer() {
+  clearInterval(S.timer); S.left = CFG.PICK_TIME; $('hudTimer').textContent = S.left;
+  S.timer = setInterval(() => { S.left--; $('hudTimer').textContent = Math.max(0, S.left); if (S.left <= 0) { clearInterval(S.timer); autoPlace(); } }, 1000);
+}
+function tip(msg) {
+  const left = Math.max(0, deployChances() - S.deployN);
+  $('deployTip').innerHTML = msg || `${isDeathmatch() ? '<b>☠ 데스매치</b> · ' : ''}배치 <b>${S.deployN}</b>/${deployChances()} · 유닛 <b>${countSide('a')}</b>/${CFG.MAX_UNITS} · `
+    + (S.pick != null ? `<b>${CHARS[S.pool[S.pick]].name}</b> 선택됨 — 빈 칸에 놓거나, 같은 지후(금색)에 겹쳐 레벨업` : '카드를 골라 놓으세요 · 내 지후를 누르면 자리를 옮길 수 있어요') + (left ? '' : '');
+}
+// 카드 고르기 → 칸 · 지후 누르기
+function choosePick(i) {
+  if (S.phase !== 'deploy') return;
+  const id = S.pool[i];
+  if (!playable('a', id)) { tip(mergeTile('a', id) == null && sameCount('a', id) >= CFG.SAME_LIMIT ? `같은 지후가 많으면 서로 싸워요! <b>${CHARS[id].name}</b>은(는) ${CFG.SAME_LIMIT}기까지만 둘 수 있어요.` : `놓을 자리가 없고 합칠 <b>${CHARS[id].name}</b>도 없습니다.`); return; }
+  S.pick = S.pick === i ? null : i; S.moveSel = null;
+  renderPool(); renderField(); tip();
+}
+function tapTile(t) {
+  if (S.phase !== 'deploy') return;
+  const p = S.place.a[t];
+  if (S.pick != null) {
+    const id = S.pool[S.pick];
+    if (p && p.id === id) { if (p.lv >= CFG.MAX_LV) return tip(`<b>${CHARS[id].name}</b>은(는) 이미 최대 레벨(<b>MAX</b>)입니다.`); levelUp('a', t); banner(`${CHARS[id].name} Lv.${p.lv}!`); return finishDeploy(); }
+    if (!p) { if (!canPlaceNew('a', id)) return tip(countSide('a') >= CFG.MAX_UNITS ? `유닛은 ${CFG.MAX_UNITS}기까지 놓을 수 있어요. 같은 지후에 겹쳐 레벨업하세요.` : `<b>${CHARS[id].name}</b>은(는) ${CFG.SAME_LIMIT}기까지만 둘 수 있어요.`); placeAt('a', t, id); return finishDeploy(); }
+    return tip('이 칸에는 다른 지후가 있어요. 빈 칸이나 같은 지후를 누르세요.');
+  }
+  // 자리 옮기기 (전작 v42HandleUnitTap · v42HandleFieldTap): 내 지후 → 다른 칸 (지후가 있으면 맞바꾼다)
+  if (S.moveSel == null) { if (p) { S.moveSel = t; renderField(); tip(`<b>${CHARS[p.id].name}</b> 선택 — 옮길 칸을 누르세요 (다시 누르면 상세 정보)`); } return; }
+  if (S.moveSel === t) { S.moveSel = null; renderField(); tip(); if (p) charDetail(p.id, true); return; }
+  const a = S.moveSel, tmp = S.place.a[t]; S.place.a[t] = S.place.a[a]; S.place.a[a] = tmp; S.moveSel = null;
+  renderField(); tip(`<b>${CHARS[S.place.a[t].id].name}</b> → ${ROW_LABEL[Math.floor(t / CFG.COLS)]} ${t % CFG.COLS + 1}번 칸`);
+}
+// 시간 초과: 고른 카드(없으면 놓을 수 있는 첫 카드) → 합칠 수 있으면 합치고, 아니면 역할에 맞는 줄에 놓는다 (전작 autoPlacePool)
+function autoPlace() {
+  if (S.phase !== 'deploy' || !S.pool.length) return;
+  const ok = S.pool.map((id, i) => i).filter(i => playable('a', S.pool[i]));
+  const i = S.pick != null && ok.includes(S.pick) ? S.pick : ok.length ? ok[0] : 0, id = S.pool[i];
+  const m = mergeTile('a', id);
+  if (m != null) levelUp('a', m); else if (canPlaceNew('a', id)) { const t = pickTile('a', roleRow(id)); if (t != null) placeAt('a', t, id); }
+  finishDeploy();
+}
+// 내 배치가 끝나면 상대도 하나 (전작 completeDeployAction → enemyAutoDeployOne)
+function finishDeploy(delay = 120) {
+  if (S.phase !== 'deploy') return;
+  S.phase = 'deploy-resolve'; clearInterval(S.timer); S.pick = null; S.moveSel = null;
+  document.querySelectorAll('.pcard').forEach(el => el.classList.add('picked'));
+  botDeployOne();
+  renderField();
+  setTimeout(nextDeploy, delay);
+}
+function botDeployOne() {
+  const pool = rollPool('e'); if (!pool.length) return;
+  const full = countSide('e') >= CFG.MAX_UNITS;
+  const merges = pool.filter(id => mergeTile('e', id) != null), placeable = pool.filter(id => canPlaceNew('e', id));
+  let id = null;
+  if (merges.length && (full || rng() < 0.55)) id = A.pick(merges, 1)[0];
+  else if (full || !placeable.length) { if (merges.length) id = A.pick(merges, 1)[0]; else return; }
+  else id = A.pick(placeable, 1)[0];
+  const same = mergeTile('e', id);
+  if (same != null && (full || rng() < 0.7)) { levelUp('e', same); return; }
+  if (!canPlaceNew('e', id)) { if (same != null) levelUp('e', same); return; }
+  const t = pickTile('e', rng() < 0.5 ? roleRow(id) : null); if (t != null) placeAt('e', t, id);
+}
+// ── 그리기 ──
 function renderLives() { ['a', 'e'].forEach(s => { $('hudLives' + s.toUpperCase()).innerHTML = Array.from({ length: CFG.LIVES }, (_, i) => `<i class="${i < S.lives[s] ? '' : 'off'}"></i>`).join(''); }); }
-function renderHand() {
-  $('summonLeft').textContent = S.charges.a;
-  $('btnSummon').disabled = S.phase !== 'deploy' || S.charges.a <= 0 || S.hand.a.length >= CFG.HAND_MAX;
-  $('hand').innerHTML = S.hand.a.map((h, i) => `<div class="hcard" data-hand="${i}" style="--rc:var(--r-${CHARS[h.id].rarity})">${pic(h.id)}<span class="lv">${h.lv}</span><span class="rb"></span></div>`).join('') || '<span class="note" style="align-self:center">소환을 누르면 덱의 지후가 여기에 들어와요</span>';
+function setPhase(t) { $('hudPhase').lastElementChild.textContent = t; }
+function renderPool() {
+  const deploy = S.phase === 'deploy';
+  $('pool').innerHTML = (S.pool || []).map((id, i) => { const c = CHARS[id], m = mergeTile('a', id) != null;
+    return `<div class="pcard${S.pick === i ? ' on' : ''}${playable('a', id) ? '' : ' dead'}${deploy ? '' : ' picked'}" data-i="${i}"><span class="pp">${pic(id)}</span><span><b>${c.name}</b><small>HP ${c.hp} · ATK ${c.atk}</small></span>${m ? '<span class="mg">Lv↑</span>' : ''}</div>`; }).join('')
+    || '<span class="note" style="align-self:center">배치 카드가 여기에 나와요</span>';
 }
 function renderField() {
-  const f = $('field'); f.innerHTML = '';
-  ['a', 'e'].forEach(side => S.tiles[side].forEach((list, t) => {
-    const { x, y } = tileXY(side, t), C = CFG.TILE;
-    const tile = document.createElement('div'); tile.className = 'tile ' + (side === 'a' ? 'ally' : 'enemy'); tile.dataset.side = side; tile.dataset.tile = t;
-    tile.style.left = (x - C / 2) + 'px'; tile.style.top = (y - C / 2) + 'px'; f.appendChild(tile);
-    list.forEach(it => {
-      const u = makeUnit(side, it.id, it.lv, x, y);
-      const el = unitEl(u); el.dataset.side = side; el.dataset.tile = t; if (side === 'a') el.style.touchAction = 'none';
+  const f = $('field'); f.innerHTML = ''; fitField();
+  const ts = tileSize(), pick = S.phase === 'deploy' && S.pick != null ? S.pool[S.pick] : null;
+  ['a', 'e'].forEach(side => {
+    for (let t = 0; t < TILES; t++) {
+      const { x, y } = tileXY(side, t), p = S.place[side][t];
+      const tile = document.createElement('div');
+      tile.className = 'tile ' + (side === 'a' ? 'ally' : 'enemy') + (side === 'a' && pick && !p && canPlaceNew('a', pick) ? ' hot' : '') + (side === 'a' && S.moveSel === t ? ' sel' : '');
+      tile.dataset.side = side; tile.dataset.tile = t;
+      tile.style.left = (x - ts.w / 2) + 'px'; tile.style.top = (y - ts.h / 2) + 'px'; tile.style.width = ts.w + 'px'; tile.style.height = ts.h + 'px';
+      f.appendChild(tile);
+      if (!p) continue;
+      const u = makeUnit(side, p.id, p.lv, x, y);
+      const el = unitEl(u); el.dataset.side = side; el.dataset.tile = t;
+      if (side === 'a' && pick && p.id === pick && p.lv < CFG.MAX_LV) el.classList.add('merge');
+      if (side === 'a' && S.moveSel === t) el.classList.add('movesel');
       f.appendChild(el); u.el = el; drawUnit(u);
-    });
-  }));
-  $('hudCount').textContent = `배치 ${deployed('a')}/${CFG.MAX_DEPLOY}`;
-}
-function deployed(side) { return S.tiles[side].filter(l => l.length).length; }
-// 놓기 규칙: 인벤토리 → 빈 칸 배치 (최대 6기) / 칸 → 칸: 같은 지후 · 같은 레벨 한 기끼리면 합체(Lv+1) · 빈 칸이면 이동 · 아니면 맞바꾸기
-function canDrop(src, t) {
-  const tgt = S.tiles.a[t];
-  if (src.from === 'hand') {
-    const h = S.hand.a[src.i];
-    if (!tgt.length && h && deployed('a') < CFG.MAX_DEPLOY) return 'place';
-    return null;
-  }
-  if (src.t === t) return null;
-  const from = S.tiles.a[src.t];
-  if (!tgt.length) return 'move';
-  if (from.length === 1 && tgt.length === 1 && from[0].id === tgt[0].id && from[0].lv === tgt[0].lv && tgt[0].lv < CFG.MAX_LV) return 'merge';
-  return 'swap';
-}
-function doDrop(src, t) {
-  const kind = canDrop(src, t); if (!kind) return false;
-  const tgt = S.tiles.a[t];
-  if (kind === 'place') tgt.push(S.hand.a.splice(src.i, 1)[0]);
-  else if (kind === 'move') { S.tiles.a[t] = S.tiles.a[src.t]; S.tiles.a[src.t] = []; }
-  else if (kind === 'merge') { tgt[0].lv++; S.tiles.a[src.t] = []; banner(`${CHARS[tgt[0].id].name} Lv.${tgt[0].lv}!`); }
-  else if (kind === 'swap') { const tmp = S.tiles.a[t]; S.tiles.a[t] = S.tiles.a[src.t]; S.tiles.a[src.t] = tmp; }
-  renderField(); renderHand(); return true;
-}
-// 끌어서 놓기 (마우스 · 터치 공용)
-let drag = null;
-function dragStart(e, src, html) {
-  if (S.phase !== 'deploy') return;
-  e.preventDefault();
-  const g = document.createElement('div'); g.className = 'ghost'; g.innerHTML = html; document.body.appendChild(g);
-  drag = { src, g }; dragMove(e);
-}
-function tileUnder(e) { const el = document.elementFromPoint(e.clientX, e.clientY); const t = el && el.closest('[data-tile]'); return t && t.dataset.side === 'a' ? Number(t.dataset.tile) : null; }
-function dragMove(e) {
-  if (!drag) return;
-  drag.g.style.left = e.clientX + 'px'; drag.g.style.top = e.clientY + 'px';
-  document.querySelectorAll('.tile.hot, .tile.bad').forEach(x => x.classList.remove('hot', 'bad'));
-  const t = tileUnder(e); if (t == null) return;
-  const tile = document.querySelector(`.tile[data-side="a"][data-tile="${t}"]`);
-  if (tile) tile.classList.add(canDrop(drag.src, t) ? 'hot' : 'bad');
-}
-function dragEnd(e) {
-  if (!drag) return;
-  const t = tileUnder(e); drag.g.remove();
-  document.querySelectorAll('.tile.hot, .tile.bad').forEach(x => x.classList.remove('hot', 'bad'));
-  const src = drag.src; drag = null;
-  if (t != null && !doDrop(src, t) && src.from === 'hand' && !S.tiles.a[t].length && deployed('a') >= CFG.MAX_DEPLOY) banner(`최대 ${CFG.MAX_DEPLOY}기까지 놓을 수 있어요`);
-}
-$('hand').addEventListener('pointerdown', e => { const c = e.target.closest('.hcard'); if (!c) return; const i = Number(c.dataset.hand); dragStart(e, { from: 'hand', i }, pic(S.hand.a[i].id)); });
-$('field').addEventListener('pointerdown', e => { const u = e.target.closest('.unit'); if (!u || u.dataset.side !== 'a') return; const t = Number(u.dataset.tile); dragStart(e, { from: 'tile', t }, pic(S.tiles.a[t][0].id)); });
-window.addEventListener('pointermove', dragMove);
-window.addEventListener('pointerup', dragEnd);
-// 봇: 소환 다 쓰고, 같은 것끼리 합체, 빈 칸에 둔다 (최대 6기)
-function botDeploy() {
-  while (summon('e')) {}
-  const T = S.tiles.e, H = S.hand.e;
-  for (let changed = true; changed;) { // 합체
-    changed = false;
-    for (let i = 0; i < 9 && !changed; i++) for (let j = i + 1; j < 9 && !changed; j++) {
-      if (T[i].length === 1 && T[j].length === 1 && T[i][0].id === T[j][0].id && T[i][0].lv === T[j][0].lv && T[i][0].lv < CFG.MAX_LV) { T[i][0].lv++; T[j] = []; changed = true; }
     }
+  });
+  // 줄 이름 (내 쪽)
+  for (let row = 0; row < CFG.ROWS; row++) {
+    const c = tileXY('a', row * CFG.COLS), lab = document.createElement('span'); lab.className = 'rowlab'; lab.textContent = ROW_LABEL[row];
+    if (isEW()) { lab.style.left = c.x + 'px'; lab.style.top = (c.y - ts.h / 2 - 22) + 'px'; } else { lab.style.left = (c.x - ts.w / 2 - 34) + 'px'; lab.style.top = c.y + 'px'; }
+    f.appendChild(lab);
   }
-  const order = [0, 3, 6, 1, 4, 7, 2, 5, 8]; // 앞줄(가운데 쪽)부터
-  for (let k = H.length - 1; k >= 0; k--) {
-    if (deployed('e') >= CFG.MAX_DEPLOY) break;
-    const empty = order.find(t => !T[t].length);
-    if (empty != null) T[empty].push(H.splice(k, 1)[0]);
-  }
+  $('hudCount').textContent = `유닛 ${countSide('a')}/${CFG.MAX_UNITS}`;
 }
-function startCombat() {
+$('pool').addEventListener('click', e => { const c = e.target.closest('.pcard'); if (c) choosePick(Number(c.dataset.i)); });
+$('field').addEventListener('click', e => {
   if (S.phase !== 'deploy') return;
-  if (!S.tiles.a.some(l => l.length)) return banner('지후를 한 기 이상 놓으세요');
-  S.phase = 'combat'; S.time = 0; acc = 0; lastTs = 0; S.started = false;
-  $('btnReady').disabled = true; $('btnSummon').disabled = true; $('deployTip').hidden = true;
-  const f = $('field'); f.querySelectorAll('.tile').forEach(t => t.style.opacity = '.35');
-  f.querySelectorAll('.unit').forEach(el => el.remove());
-  S.units = [];
-  ['a', 'e'].forEach(side => S.tiles[side].forEach((list, t) => list.forEach(it => {
-    const { x, y } = tileXY(side, t);
-    const u = makeUnit(side, it.id, it.lv, x, y);
-    u.el = unitEl(u); f.appendChild(u.el); drawUnit(u); S.units.push(u);
-  })));
+  const el = e.target.closest('[data-tile]'); if (!el || el.dataset.side !== 'a') return;
+  tapTile(Number(el.dataset.tile));
+});
+// ── 전투 ──
+function beginCombat() {
+  S.phase = 'combat'; S.time = 0; acc = 0; lastTs = 0; S.started = false; S.lastDmgAt = 0; S.stallEnded = false; S.odds = [];
+  clearInterval(S.timer); S.pick = null; S.moveSel = null; renderPool();
+  $('deployTip').innerHTML = '⚔️ <b>전투 진행중</b>';
+  const f = $('field'); renderField(); f.querySelectorAll('.unit').forEach(el => el.remove()); f.querySelectorAll('.tile').forEach(t => t.style.opacity = '.35');
+  uidSeq = 0; S.units = [];
+  ['a', 'e'].forEach(side => S.place[side].forEach((p, t) => { if (!p) return; const { x, y } = tileXY(side, t); const u = makeUnit(side, p.id, p.lv, x, y); u.el = unitEl(u); f.appendChild(u.el); drawUnit(u); S.units.push(u); }));
+  if (!S.speedManual) S.speed = speedPref ? CFG.FAST_SPEED : 1; renderSpeedBtn();
   setPhase('전투 중'); banner('전투 시작!');
   requestAnimationFrame(loop);
 }
-function endRound(w) {
+// 배속 버튼 (전작 1× / 1.5×, 켜 두면 다음 전투도 1.5배속)
+let speedPref = false;
+function renderSpeedBtn() { const on = S.phase === 'combat' ? S.speed > 1 : speedPref; $('btnSpeed').textContent = on ? '⏩ 1.5×' : '⏩ 1×'; $('btnSpeed').classList.toggle('on', on); }
+$('btnSpeed').addEventListener('click', () => { if (S.phase === 'combat') { S.speed = S.speed > 1 ? 1 : CFG.FAST_SPEED; S.speedManual = true; speedPref = S.speed > 1; } else speedPref = !speedPref; renderSpeedBtn(); });
+// ── 라운드 끝 (전작 endRoundCombat): 시간 종료 50:50 은 같은 라운드를 처음 배치로 다시 · 양쪽 전멸은 라이프 그대로 다음 라운드 ──
+function endRound(w, timedOut) {
   S.phase = 'roundEnd';
   S.shots.forEach(s => s.el.remove()); S.shots = []; S.units.forEach(clearTelegraph);
-  if (w === 'a') S.lives.e--; else if (w === 'e') S.lives.a--;
+  setPhase('라운드 종료'); $('hudOdds').hidden = true;
+  const why = timedOut ? (S.stallEnded ? `${CFG.STALL}초 동안 피해 없음` : `${CFG.ROUND_TIME}초 종료`) : '';
+  if (timedOut && w === 'draw') {
+    banner('DRAW · 같은 라운드 다시'); $('deployTip').innerHTML = `${why} · 승률 50:50 · 같은 라운드를 처음 배치로 다시 싸웁니다`;
+    setTimeout(() => { S.place = { a: S.roundStart.a.map(p => p && { ...p }), e: S.roundStart.e.map(p => p && { ...p }) }; startRound(); }, 1800);
+    return;
+  }
+  if (w === 'a') S.lives.e = Math.max(0, S.lives.e - 1); else if (w === 'e') S.lives.a = Math.max(0, S.lives.a - 1);
   S.hist.push(w === 'a' ? 'W' : w === 'e' ? 'L' : 'D');
-  renderLives(); setPhase('라운드 종료');
-  if (w) lifeFx(w === 'a' ? 'e' : 'a'); else banner('무승부');
+  renderLives();
+  if (w !== 'draw') lifeFx(w === 'a' ? 'e' : 'a'); else banner('무승부');
+  $('deployTip').innerHTML = (why ? why + ' · 승률 판정 · ' : '') + (w === 'a' ? '라운드 승리' : w === 'e' ? '라운드 패배' : '양쪽 전멸 · 무승부');
   setTimeout(() => {
     if (S.lives.a <= 0 || S.lives.e <= 0) return endMatch(S.lives.a > 0);
-    S.round++; S.charges.a += CFG.SUMMON_PER_ROUND; S.charges.e += CFG.SUMMON_PER_ROUND;
-    startDeploy();
-  }, 1700);
+    S.round++; startRound();
+  }, 1800);
 }
 // 라이프 감소 오버레이 — 내가 잃으면 어두운 화면 + 붉은 테두리, 상대가 잃으면 밝은 화면
 function lifeFx(loser) {
@@ -1299,7 +1414,7 @@ function lifeFx(loser) {
   clearTimeout(lifeFx.t); lifeFx.t = setTimeout(() => { el.className = ''; }, 1500);
 }
 function endMatch(win) {
-  S.phase = 'idle';
+  S.phase = 'idle'; clearInterval(S.timer);
   const xp = win ? 60 : 30, dia = win ? 80 : 30;
   const up = addXp(xp); profile.dia += dia; if (win) profile.wins++; else profile.losses++; save();
   lbPush(); // 리더보드 전적 갱신 (오프라인이면 조용히 건너뜀)
@@ -1313,9 +1428,7 @@ function endMatch(win) {
   show('result');
   setTimeout(() => { const i = $('resBody').querySelector('.lvbar i'); if (i) i.style.width = (profile.xp / xpNeed(profile.level) * 100).toFixed(1) + '%'; }, 80);
 }
-$('btnSummon').addEventListener('click', () => { if (S.phase === 'deploy' && summon('a')) renderHand(); });
-$('btnReady').addEventListener('click', startCombat);
-$('btnQuit').addEventListener('click', () => { if (confirm('포기하면 패배로 처리돼요. 나갈까요?')) { S.phase = 'idle'; endMatch(false); } });
+$('btnQuit').addEventListener('click', () => { if (confirm('포기하면 패배로 처리돼요. 나갈까요?')) { clearInterval(S.timer); clearTimeout(newMatch.t); S.phase = 'idle'; endMatch(false); } });
 
 // ═════════ 가차 ═════════
 function renderGacha() {
@@ -1497,7 +1610,7 @@ $('btnResOk').addEventListener('click', () => { renderLobby(); show('lobby'); })
 $('btnStart').addEventListener('click', () => { const n = $('nickInput').value.trim(); if (!n) return banner('닉네임을 넣어 주세요'); profile.nick = n.slice(0, 12); save(); renderLobby(); show('lobby'); });
 if (profile.nick) { renderLobby(); show('lobby'); } else show('welcome');
 startUpdateChecks(); // PWA 등록 + 5분마다 새 버전 확인
-window.__jb2 = { S, CHARS, CFG, A, profile: () => profile, newMatch, summon, doDrop, startCombat, pull, rollRarity, makeUnit, stepCombat, lbLoad, lbPush, fbInit }; // BETA 테스트용
+window.__jb2 = { S, CHARS, CFG, A, profile: () => profile, newMatch, startRound, choosePick, tapTile, autoPlace, beginCombat, pull, rollRarity, makeUnit, stepCombat, tileXY, allyOdds, lbLoad, lbPush, fbInit }; // BETA 테스트용
 })();
 </script>
 </body>

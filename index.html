@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="2.1"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="2.1"><meta name="jhbt2-build" content="1"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -405,6 +405,10 @@ input.text::placeholder { color:#555; }
 .deckstatus { margin:16px 0 12px; font:700 12px var(--mono); color:#666; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .deckstatus .btn { padding:4px 12px; font-size:11px; }
 .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(124px, 1fr)); gap:10px; padding-bottom:30px; }
+.cards .rdiv { grid-column:1 / -1; display:flex; align-items:center; gap:10px; margin-top:14px; font:900 12px var(--mono); color:#111; }
+.cards .rdiv:first-child { margin-top:0; }
+.cards .rdiv::after { content:''; flex:1; height:1px; background:#d6d6d2; order:1; }
+.cards .rdiv span { order:2; color:#888; font-weight:800; }
 .ccard { position:relative; border:1px solid #e1e1de; border-radius:14px; background:#fff; padding:14px 6px 10px; text-align:center; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:5px; transition:transform .15s, border-color .2s; animation:rise .4s backwards; }
 .ccard:hover { transform:translateY(-2px); border-color:#111; }
 .ccard .pic { width:64px; height:64px; border-radius:50%; display:grid; place-items:center; font-size:34px; background:#ebebe9; overflow:hidden; }
@@ -1287,8 +1291,11 @@ function renderDeck() {
   $('deckRow').innerHTML = Array.from({ length: 5 }, (_, i) => { const id = profile.deck[i], c = id && CHARS[id];
     return `<div class="deckslot${id ? ' on' : ''}${pendingEquip ? ' swap' : ''}" data-slot="${i}"><span class="no">0${i + 1}</span><span class="pic">${id ? pic(id) : '+'}</span><b>${c ? c.name : '빈 슬롯'}</b><small>${c ? DOTS[c.rarity] : ''}</small></div>`; }).join('');
   $('deckCount').textContent = `${profile.deck.length} / 5`;
-  const ids = Object.keys(CHARS).sort((a, b) => RARITY_ORDER[CHARS[b].rarity] - RARITY_ORDER[CHARS[a].rarity]);
-  $('deckCards').innerHTML = ids.map((id, i) => { const c = CHARS[id]; return `<div class="ccard r-${c.rarity}${profile.deck.includes(id) ? ' sel' : ''}${owned(id) ? '' : ' locked'}" data-id="${id}" style="animation-delay:${(i * 0.03).toFixed(2)}s"><div class="pic">${pic(id)}</div><b>${c.name}</b><small>${DOTS[c.rarity]} ${RARITY[c.rarity]} · ${c.role}</small></div>`; }).join('');
+  // 등급별 칸막이 — 전설부터, 칸막이는 그리드 한 줄을 통째로 차지한다
+  let n = 0;
+  $('deckCards').innerHTML = Object.keys(RARITY).reverse().map(r => { const ids = Object.keys(CHARS).filter(id => CHARS[id].rarity === r);
+    if (!ids.length) return '';
+    return `<div class="rdiv r-${r}"><b>${DOTS[r]} ${RARITY[r]}</b><span>${ids.filter(owned).length} / ${ids.length}</span></div>` + ids.map(id => { const c = CHARS[id]; return `<div class="ccard r-${c.rarity}${profile.deck.includes(id) ? ' sel' : ''}${owned(id) ? '' : ' locked'}" data-id="${id}" style="animation-delay:${(n++ * 0.03).toFixed(2)}s"><div class="pic">${pic(id)}</div><b>${c.name}</b><small>${DOTS[c.rarity]} ${RARITY[c.rarity]} · ${c.role}</small></div>`; }).join(''); }).join('');
   $('deckStatus').innerHTML = pendingEquip ? `<b>${CHARS[pendingEquip].name}</b> 장착 · 위에서 바꿀 자리를 고르세요. <button class="btn" id="eqCancel">취소</button>` : DECK_TIP;
   if (pendingEquip) $('eqCancel').onclick = () => { pendingEquip = null; renderDeck(); };
 }

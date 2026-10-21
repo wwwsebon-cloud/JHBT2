@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="2.1"><meta name="jhbt2-build" content="2"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="2.2"><meta name="jhbt2-build" content="1"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -945,16 +945,16 @@ const PORTRAITS = {
 const CHARS = {
   fire: { name: '화염 지후', rarity: 'common', role: '딜러', hp: 1000, atk: 45, atkSpeed: 3, range: 4.5, speed: 1.6, portrait: PORTRAITS.fire, starter: true, sfx: 'fire', color: '#ff6b35',
     story: '삼겹살을 구워먹다가 부루스타가 폭주해서 전신 화상을 당한 지후입니다. 하지만 그의 불타오르는 삶의 의지와 열정은 곧 불씨로 되살아났어요. 특기는 가스라이팅.',
-    passive: '일반 공격이 <b>5초</b> 동안 1초마다 공격력의 <b>110%</b> [화상] 피해를 입힌다. [화상]은 <b>중첩</b>된다.',
-    onHit(u, t, A) { A.status(t, 'burn', 5, { dps: u.atk * 1.1, stack: true, src: u }); } },
+    passive: '일반 공격이 <b>5초</b> 동안 1초마다 공격력의 <b>65%</b> [화상] 피해를 입힌다. [화상]은 <b>중첩</b>된다.',
+    onHit(u, t, A) { A.status(t, 'burn', 5, { dps: u.atk * 0.65, stack: true, src: u }); } },
   ice: { name: '얼음 지후', rarity: 'common', role: '컨트롤러', hp: 900, atk: 70, atkSpeed: 4, range: 5, speed: 1.6, portrait: PORTRAITS.ice, starter: true, sfx: 'ice', color: '#4fc3f7',
     story: '집에서 실수로 에어컨을 끄지 않고 잠을 자는 바람에 상시로 감기 상태입니다. 그는 격리 처리 당했고, 결국 그도 세상에 등을 돌리고 냉정해졌습니다.',
     passive: '일반 공격이 대상을 <b>1.6초</b> 동안 [빙결]시킨다.',
     onHit(u, t, A) { A.status(t, 'freeze', 1.6); } },
-  sword: { name: '검 지후', rarity: 'common', role: '딜러', hp: 1030, atk: 150, atkSpeed: 1.2, range: 'melee', speed: 1.6, portrait: PORTRAITS.sword, starter: true, sfx: 'swing', color: '#8d8d8d',
+  sword: { name: '검 지후', rarity: 'common', role: '딜러', hp: 1030, atk: 190, atkSpeed: 1.2, range: 'melee', speed: 1.6, portrait: PORTRAITS.sword, starter: true, sfx: 'swing', color: '#8d8d8d',
     story: '어릴때 놀이동산에서 기념품으로 사왔던 플라스틱 검으로 단련했습니다. 지금은 누구도 넘볼 수 없는 뛰어난 검객입니다.',
     passive: '' },
-  assassin: { name: '암살 지후', rarity: 'common', role: '어쌔신', hp: 730, atk: 140, atkSpeed: 1.5, range: 'melee', speed: 1.6, portrait: PORTRAITS.assassin, starter: true, sfx: 'swing', color: '#e84393',
+  assassin: { name: '암살 지후', rarity: 'common', role: '어쌔신', hp: 830, atk: 140, atkSpeed: 1.5, range: 'melee', speed: 1.6, portrait: PORTRAITS.assassin, starter: true, sfx: 'swing', color: '#e84393',
     story: '남들처럼 평범한 갈색 머리로 염색을 하고싶었으나 미용사가 말을 잘못 알아들어 핑크색 머리로 염색해주자, 해당 미용실에 원한을 품고 미용사를 암살하기 위해 다시 태어났습니다.',
     passive: '게임 시작 <b>2초</b> 뒤 가장 멀리 있는 적의 <b>후방</b>으로 순간이동하고 <b>1초</b> 동안 [은신]. 순간이동 뒤 첫 공격은 <b>대상 하나</b>에게 공격력의 <b>400%</b>.',
     tick(u, dt, A) { if (u.blinked) return; u.blinkT = (u.blinkT || 0) + dt; if (u.blinkT >= 2) { u.blinked = true; A.blinkBehindFarthest(u); A.status(u, 'stealth', 1); u.nextHitPct = 400; u.nextHitSingle = true; } } },
@@ -968,7 +968,7 @@ const CHARS = {
     skill: { type: 'hit', need: 6, desc: '<b>SP 6</b>. <b>2.5초</b> 동안 자신을 뺀 모든 아군의 공격속도 <b>+30%</b>.',
       run(u, A) { const m = effMult(u.lv); A.allies(u).forEach(a => { if (a !== u) A.buff(a, 'accelS', { aspd: 0.3 * m }, 2.5); }); A.ring(u.x, u.y, 1.4); dmgNum(u, '가속!', { crit: true }); } },
     onStart(u, A) { const m = effMult(u.lv); A.cross(u).forEach(a => A.buff(a, 'accelP', { aspd: 0.18 * m }, 5)); } },
-  lonely: { name: '고독한 지후', rarity: 'epic', role: '탱커', hp: 1800, atk: 90, atkSpeed: 1, range: 'melee', speed: 1.6, portrait: PORTRAITS.lonely, sfx: 'swing', color: '#c98a4b',
+  lonely: { name: '고독한 지후', rarity: 'epic', role: '탱커', hp: 1700, atk: 90, atkSpeed: 1, range: 'melee', speed: 1.6, portrait: PORTRAITS.lonely, sfx: 'swing', color: '#c98a4b',
     story: '어린 시절 친구들과 술래잡기를 하던 중, 아무도 자신을 찾으러 오지 않았던 기억을 간직한 지후입니다. 처음에는 단순히 술래들이 자신을 잊었다고 생각했지만, 시간이 흐르면서 그는 누구에게도 의지하지 않는 법을 배웠습니다. 수많은 상처와 고난을 견뎌낸 끝에, 그는 타인의 생명력마저 자신의 전투 방식으로 삼는 경지에 도달했습니다. 이제 그는 혼자서도 충분히 강하지만, 가끔 누군가 먼저 말을 걸어주기를 기다리고 있습니다.',
     passive: '인접 <b>8방향</b> 칸에 아무 지후도 배치되어 있지 않으면 [고독]: 일반 공격이 대상 <b>현재 체력의 10%</b> 추가 피해.',
     onStart(u, A) { u.alone = A.alone(u); if (u.alone) A.status(u, 'alone', 999); },
@@ -1027,9 +1027,9 @@ const CHARS = {
   gift: { name: '선물 지후', rarity: 'legend', role: '보조형', hp: 1260, atk: 0, atkSpeed: 1, range: 1, speed: 0, immobile: true, noAttack: true, portrait: PORTRAITS.gift, color: '#e84393',
     story: '',
     passive: '<b>움직이지 않고 공격하지 않는다.</b> 라운드 시작 뒤 <b>초당 SP 1</b>을 얻는다.',
-    skill: { type: 'sec', need: 12, once: true, desc: '<b>SP 12</b> · 1회. 게임에 있는 모든 지후 중 <b>무작위 하나</b>로 변한다 (같은 레벨).',
+    skill: { type: 'sec', need: 18, once: true, desc: '<b>SP 18</b> · 1회. 게임에 있는 모든 지후 중 <b>무작위 하나</b>로 변한다 (같은 레벨). 선물 지후는 사라지고 변한 지후가 그 자리를 차지한다.',
       run(u, A) { const ids = Object.keys(CHARS).filter(id => id !== 'gift'); A.transform(u, ids[Math.floor(rng() * ids.length)]); } } },
-  slime: { name: '슬라임 지후', rarity: 'rare', role: '탱커', hp: 1000, atk: 230, atkSpeed: 2.3, range: 'melee', speed: 1.6, portrait: PORTRAITS.slime, sfx: 'bash', color: '#12a8ef',
+  slime: { name: '슬라임 지후', rarity: 'rare', role: '탱커', hp: 600, atk: 230, atkSpeed: 2.3, range: 'melee', speed: 1.6, portrait: PORTRAITS.slime, sfx: 'bash', color: '#12a8ef',
     story: '',
     passive: '쓰러지면 <b>작은 슬라임 2기</b>로 분열한다. 자식은 체력 · 공격력이 <b>절반</b>이고 최대 <b>2단계</b>까지 분열한다.',
     onDeath(u, A) { const d = u.slimeDepth || 0; if (d >= 2) return; [-1, 1].forEach(k => A.spawnChild(u, 'slime', { hp: u.baseMaxHp * 0.5, atk: u.atk * 0.5, depth: d + 1, dx: k * unitRadius(u) * 0.9, dy: k * unitRadius(u) * 0.4 })); } },
@@ -1047,8 +1047,8 @@ const CHARS = {
   gun: { name: '총 지후', rarity: 'epic', role: '딜러', hp: 1270, atk: 105, atkSpeed: 2.1, range: 6, speed: 1.6, multiShot: true, portrait: PORTRAITS.gun, sfx: 'shot', color: '#555555',
     story: '',
     passive: '<b>자신의 레벨</b>만큼의 적을 한꺼번에 공격한다 (Lv3이면 셋). 사거리 안에 그만큼 없으면 있는 만큼.' },
-  coin: { name: '코인 지후', rarity: 'rare', role: '딜러', hp: 1000, atk: 50, atkSpeed: 1, range: 5, speed: 1.6, coin: true, portrait: PORTRAITS.coin, sfx: 'shot', color: '#f2c94c',
-    story: '', atkText: () => { const m = coinMult(); return `${Math.round(50 * m)} (${m >= 1 ? '+' : ''}${Math.round((m - 1) * 100)}%)`; },
+  coin: { name: '코인 지후', rarity: 'rare', role: '딜러', hp: 1000, atk: 80, atkSpeed: 1, range: 5, speed: 1.6, coin: true, portrait: PORTRAITS.coin, sfx: 'shot', color: '#f2c94c',
+    story: '', atkText: () => { const m = coinMult(); return `${Math.round(80 * m)} (${m >= 1 ? '+' : ''}${Math.round((m - 1) * 100)}%)`; },
     passive: '기본 공격력이 <b>10분마다</b> <b>-50% ~ +50%</b> 사이 무작위 비율로 변한다. 지난번에 올랐으면 떨어질 가능성이, 내렸으면 오를 가능성이 높다.' },
   combo: { name: '콤보 지후', rarity: 'epic', role: '딜러', hp: 1100, atk: 70, atkSpeed: 1.2, range: 4.8, speed: 1.6, portrait: PORTRAITS.combo, sfx: 'shot', color: '#ff6b6b',
     story: '',
@@ -1087,19 +1087,30 @@ function loadProfile() {
   let p = null; try { p = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) {}
   return normProfile(p);
 }
+// 개발자 모드: 지후배틀 1 운영자(admins/<uid> 문서가 있는 계정)만 켤 수 있다. 켜면 모든 지후가 해금된다 (서버 기록은 그대로)
+const DEV = { op: false, pref: (() => { try { return localStorage.getItem('jhbt2-dev') === '1'; } catch (e) { return false; } })() };
+const devOn = () => DEV.op && DEV.pref;
 function normProfile(p) {
   if (!p || p.v !== 1) return freshProfile();
   p = Object.assign(freshProfile(), p);
   p.owned = Object.fromEntries(Object.entries(p.owned || {}).filter(([id]) => CHARS[id])); STARTERS().forEach(id => { if (!p.owned[id]) p.owned[id] = 1; }); // 기본 지급
   p.shards = Object.fromEntries(Object.entries(p.shards || {}).filter(([id]) => CHARS[id]));
-  p.deck = (p.deck || []).filter(id => CHARS[id] && p.owned[id]).slice(0, 5); STARTERS().forEach(id => { if (p.deck.length < 5 && !p.deck.includes(id)) p.deck.push(id); }); // 빠진 자리는 기본 지후로
+  p.deck = (p.deck || []).filter(id => CHARS[id] && (p.owned[id] || DEV.pref)).slice(0, 5); STARTERS().forEach(id => { if (p.deck.length < 5 && !p.deck.includes(id)) p.deck.push(id); }); // 빠진 자리는 기본 지후로
   return p;
 }
 let profile = loadProfile();
 function save() { profile.savedAt = Date.now(); try { localStorage.setItem(SAVE_KEY, JSON.stringify(profile)); } catch (e) {} queueBackup(); } // 로그인했으면 서버에도 (1.5초 모아서)
 function xpNeed(lv) { return 100 + 50 * (lv - 1); } // Lv1→2 100 · 이후 +50씩
 function addXp(n) { profile.xp += n; let up = 0; while (profile.xp >= xpNeed(profile.level)) { profile.xp -= xpNeed(profile.level); profile.level++; up++; } return up; }
-function owned(id) { return (profile.owned[id] || 0) > 0; }
+function owned(id) { return devOn() || (profile.owned[id] || 0) > 0; }
+function devSanitize() { if (devOn()) return; profile.deck = profile.deck.filter(id => (profile.owned[id] || 0) > 0); STARTERS().forEach(id => { if (profile.deck.length < 5 && !profile.deck.includes(id)) profile.deck.push(id); }); } // 개발자 모드가 꺼지면 안 가진 지후는 덱에서 뺀다
+async function devCheck() {
+  let op = false;
+  try { const u = FB.auth && FB.auth.currentUser; if (u && !u.isAnonymous && (await fbInit())) op = (await FB.sdk.getDoc(FB.sdk.doc(FB.db, 'admins', u.uid))).exists(); } catch (e) { op = false; }
+  DEV.op = op; devSanitize();
+  if (typeof renderDeck === 'function') { try { renderDeck(); } catch (e) {} }
+  if ($('setBody') && $('setModal').classList.contains('show')) renderSettings();
+}
 
 // ═════════ 리더보드 · Firebase (0.6.0 — 전작 jihoobattle 프로젝트 재사용) ═════════
 // 익명 인증으로 자기 문서(jhbt2lb/<uid>)만 쓰고, 전체는 읽는다. 규칙은 firestore.rules 참고.
@@ -1130,6 +1141,7 @@ function fbInit() {
       await FB.auth.authStateReady();
       if (!FB.auth.currentUser) await authModule.signInAnonymously(FB.auth); // 로그인한 계정이 남아 있으면 그대로
       FB.uid = FB.auth.currentUser.uid; FB.on = true;
+      FB.sdk.onAuthStateChanged(FB.auth, () => { devCheck(); });
     } catch (err) {
       FB.err = String(err && err.code || err && err.message || err || 'unknown');
       console.warn('[jhbt2] 리더보드 오프라인:', FB.err);
@@ -2881,6 +2893,20 @@ $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnC
 // tag: new 신규 · buff 상향 · nerf 하향 · adjust 조정 · fix 수정 · system 시스템
 const PN_TAG = { new: '신규', buff: '상향', nerf: '하향', adjust: '조정', fix: '수정', system: '시스템' };
 const PATCH_NOTES = [
+  { v: '2.2', date: '2026.10.23', title: '개발자 모드 · 밸런스 패치', sections: [
+    { title: '시스템', items: [
+      { icon: '🛠', name: '개발자 모드', tag: 'system', desc: '지후배틀 1 <b>운영자</b>로 등록된 계정은 환경설정에서 토글 가능 · 켜면 <b>모든 지후 해금</b>.' },
+    ] },
+    { title: '밸런스', items: [
+      { id: 'gift', name: '선물 지후', tag: 'nerf', desc: '변신 필요 SP <b>12 → 18</b> · 변신하면 선물 지후는 사라지고 <b>변신한 지후가 그 자리를 차지</b> (아군).' },
+      { id: 'slime', name: '슬라임 지후', tag: 'nerf', desc: '체력 <b>1000 → 600</b>.' },
+      { id: 'fire', name: '화염 지후', tag: 'nerf', desc: '[화상] 피해 공격력 <b>110% → 65%</b>.' },
+      { id: 'sword', name: '검 지후', tag: 'buff', desc: '공격력 <b>150 → 190</b>.' },
+      { id: 'assassin', name: '암살 지후', tag: 'buff', desc: '체력 <b>730 → 830</b>.' },
+      { id: 'lonely', name: '고독한 지후', tag: 'nerf', desc: '체력 <b>1800 → 1700</b>.' },
+      { id: 'coin', name: '코인 지후', tag: 'buff', desc: '기본 공격력 <b>50 → 80</b>.' },
+    ] },
+  ] },
   { v: '2.1', date: '2026.10.22', title: '새 지후 7종 (2)', sections: [
     { title: '신규 지후', items: [
       { id: 'gift', name: '선물 지후', tag: 'new', desc: '전설 · 보조형. 움직이지 않고 공격하지 않는다 · 초당 <b>SP 1</b> · <b>SP 12</b>에 <b>무작위 지후</b>로 변신 (1회).' },
@@ -3029,7 +3055,8 @@ function renderHelp(tab) {
 function renderSettings() {
   $('setBody').innerHTML = `<div class="setrow"><span>효과음</span><span class="sp"></span><input type="range" min="0" max="100" value="${sfxState.vol}" id="setSfx"><b id="setSfxV" style="width:34px;text-align:right">${sfxState.vol}</b></div>
     <div class="setrow"><span>배속 기억 (다음 전투도 1.5배속)</span><span class="sp"></span><button class="btn" id="setSpeed">${speedPref ? '켜짐' : '꺼짐'}</button></div>
-    <div class="setrow"><span>닉네임</span><span class="sp"></span><input class="nick" id="setNick" maxlength="12" value="${esc(profile.nick || '')}"><button class="btn" id="setNickOk">변경</button></div>`;
+    <div class="setrow"><span>닉네임</span><span class="sp"></span><input class="nick" id="setNick" maxlength="12" value="${esc(profile.nick || '')}"><button class="btn" id="setNickOk">변경</button></div>${DEV.op ? `<div class="setrow"><span>개발자 모드 (모든 지후 해금)</span><span class="sp"></span><button class="btn" id="setDev">${DEV.pref ? '켜짐' : '꺼짐'}</button></div>` : ''}`;
+  if ($('setDev')) $('setDev').onclick = () => { DEV.pref = !DEV.pref; try { localStorage.setItem('jhbt2-dev', DEV.pref ? '1' : '0'); } catch (e) {} devSanitize(); save(); renderSettings(); renderLobby(); try { renderDeck(); } catch (e) {} banner(devOn() ? '개발자 모드 ON · 모든 지후 해금' : '개발자 모드 OFF'); };
   $('setSfx').oninput = e => { sfxSetVolume(e.target.value); $('setSfxV').textContent = sfxState.vol; };
   $('setSfx').onchange = () => sfx('buy');
   $('setSpeed').onclick = () => { speedPref = !speedPref; try { localStorage.setItem('jhbt2-speed', speedPref ? '1' : '0'); } catch (e) {} renderSettings(); };

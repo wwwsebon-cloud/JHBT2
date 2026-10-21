@@ -1,0 +1,40 @@
+{
+ "version": "2.2",
+ "date": "2026.10.23",
+ "title": "개발자 모드 · 밸런스 패치",
+ "subtitle": "선물 지후는 18 SP · 검은 190 · 슬라임은 600",
+ "chars": ["gift", "slime", "sword", "assassin", "coin"],
+ "headline": [
+  {"icon": "🛠", "title": "개발자 모드", "desc": "운영자 계정만 · 켜면 모든 지후 해금"},
+  {"id": "gift", "title": "선물 지후 조정", "desc": "SP 12 → 18 · 변신하면 그 자리를 차지"},
+  {"id": "sword", "title": "검 지후 상향", "desc": "공격력 150 → 190"}
+ ],
+ "sections": [
+  {
+   "kind": "new",
+   "label": "시스템",
+   "items": [
+    {"icon": "🛠", "title": "개발자 모드", "lines": ["지후배틀 1에 운영자로 등록된 계정은 환경설정에서 토글 가능", "켜면 모든 지후가 해금된다"]}
+   ]
+  },
+  {
+   "kind": "change",
+   "label": "선물 지후",
+   "items": [
+    {"id": "gift", "title": "선물 지후", "lines": ["변신 필요 SP 12 → 18", "변신하면 선물 지후는 사라지고 변신한 지후가 그 자리를 차지 (아군)"]}
+   ]
+  },
+  {
+   "kind": "balance",
+   "label": "밸런스",
+   "stats": [
+    {"id": "slime", "stat": "체력", "from": 1000, "to": 600},
+    {"id": "fire", "stat": "화상 피해 (공격력 %)", "from": 110, "to": 65, "unit": "%"},
+    {"id": "sword", "stat": "공격력", "from": 150, "to": 190},
+    {"id": "assassin", "stat": "체력", "from": 730, "to": 830},
+    {"id": "lonely", "stat": "체력", "from": 1800, "to": 1700},
+    {"id": "coin", "stat": "기본 공격력", "from": 50, "to": 80}
+   ]
+  }
+ ]
+}

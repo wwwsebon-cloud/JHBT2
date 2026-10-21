@@ -1,0 +1,22 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ═════════ 지후배틀 2 · BETA 리더보드 (0.6.0) ═════════
+    // 문서 ID = 인증 UID(현재는 익명 인증). 자기 문서만 쓰고, 로그인한 사람이라면 누구나 읽는다.
+    match /jhbt2lb/{uid} {
+      allow get, list: if request.auth != null;
+      allow create, update: if request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['nickname', 'level', 'wins', 'losses', 'updatedAt'])
+        && request.resource.data.nickname is string
+        && request.resource.data.nickname.size() > 0
+        && request.resource.data.nickname.size() <= 12
+        && request.resource.data.level is int && request.resource.data.level >= 1 && request.resource.data.level <= 999
+        && request.resource.data.wins is int && request.resource.data.wins >= 0 && request.resource.data.wins <= 99999
+        && request.resource.data.losses is int && request.resource.data.losses >= 0 && request.resource.data.losses <= 99999
+        && request.resource.data.updatedAt == request.time;
+      // 로컬 전적 초기화 등의 이유로 자기 문서 삭제는 허용
+      allow delete: if request.auth.uid == uid;
+    }
+  }
+}

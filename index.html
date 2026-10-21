@@ -7,10 +7,15 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="0.5.0">
+<meta name="jhbt2-version" content="0.6.0"><meta name="jhbt2-build" content="0"><!-- 0.6.0 · 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!-- PWA (전작 스캐폴딩 이식 · 0.6.0 업데이트 시스템) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0f0f0e">
 <style>
 :root { --bg:#f4f4f2; --ink:#111; --mute:#777; --line:#111; --card:#fff; --dark:#0f0f0e; --paper:#f2f2f0; --red:#e5322d; --orange:#111; --blue:#111; --yellow:#111; --green:#111;
   --r-common:#bdbdba; --r-rare:#4f9dff; --r-epic:#b26bff; --r-legend:#ffc21a;
@@ -81,6 +86,28 @@ a { color:inherit; }
 .btn.play .go { width:44px; height:44px; border-radius:50%; background:var(--ink); color:var(--paper); display:grid; place-items:center; font-size:14px; position:relative; }
 .btn.play.sm { padding:18px; border-radius:14px; } .btn.play.sm b { font:900 18px 'Pretendard Variable', sans-serif; letter-spacing:0; }
 .menu2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+/* 리더보드 (0.6.0) */
+.lbme { border:1px solid #333; border-radius:14px; padding:14px 18px; display:flex; align-items:center; gap:12px; margin-bottom:14px; background:rgba(255,255,255,.03); }
+.lbme .rk { font:900 22px var(--mono); color:var(--paper); min-width:52px; }
+.lbme .rk small { display:block; font:800 8px var(--mono); letter-spacing:.2em; color:#8f8f8c; }
+.lbme b { font-size:16px; } .lbme small { font:800 10px var(--mono); color:#8f8f8c; }
+.lbhead { display:grid; grid-template-columns:44px 1fr 56px 56px 44px; gap:8px; padding:8px 14px; border-bottom:1px solid #333; font:800 9px var(--mono); letter-spacing:.18em; color:#8f8f8c; }
+.lbrow { display:grid; grid-template-columns:44px 1fr 56px 56px 44px; gap:8px; align-items:center; padding:9px 14px; border-bottom:1px solid #262625; font:700 13px var(--mono); }
+.lbrow .rk { color:#8f8f8c; font-weight:800; }
+.lbrow.top1 .rk { color:#f7ce46; } .lbrow.top2 .rk { color:#c0c0c4; } .lbrow.top3 .rk { color:#d08b4c; }
+.lbrow .nm { font-weight:900; font-family:'Pretendard Variable', sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.lbrow .st { color:#8f8f8c; text-align:right; } .lbrow .st.w { color:var(--paper); }
+.lbrow.me { background:rgba(247,206,70,.10); border-left:2px solid #f7ce46; padding-left:12px; }
+.lbrow.load { font:800 11px var(--mono); color:#8f8f8c; justify-content:center; }
+/* 업데이트 오버레이 (잠수함 패치) */
+.update-overlay { position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(10,10,9,.82); backdrop-filter:blur(4px); }
+.update-overlay.show { display:flex; }
+.update-card { width:min(360px, 100%); background:#f2f2f0; color:#111; border-radius:16px; padding:26px 22px 22px; display:flex; flex-direction:column; align-items:center; gap:10px; animation:rise .3s backwards; text-align:center; }
+.update-card .upico { width:52px; height:52px; border-radius:50%; background:#0f0f0e; color:#f7ce46; display:grid; place-items:center; font-size:22px; }
+.update-card .upico { position:relative; } .update-card .upico::after { content:''; position:absolute; inset:0; border-radius:50%; border:2px solid #f7ce46; animation:ping 1.6s infinite; }
+.update-card .v4-verswrap { display:flex; align-items:center; gap:10px; font:900 15px var(--mono); }
+.update-card .v4-verswrap b { padding:4px 10px; border:1px solid #111; border-radius:999px; }
+.update-card h2 { margin:2px 0 0; font:900 24px 'Arial Black','Pretendard Variable',sans-serif; letter-spacing:-.04em; }
 .btn.tile { flex-direction:column; align-items:flex-start; gap:4px; padding:18px; border-radius:14px; }
 .btn.tile b { font-size:17px; font-weight:900; } .btn.tile small { font:700 10px var(--mono); color:#8f8f8c; }
 /* 닉네임 */
@@ -407,6 +434,8 @@ input.text::placeholder { color:#555; }
         <div class="menu2">
           <button class="btn tile" id="btnDeck"><b>덱 설정</b><small>지후 5기</small></button>
           <button class="btn tile" id="btnGacha"><b>뽑기</b><small>◆100 / ◆1,000</small></button>
+          <button class="btn tile" id="btnLb"><b>리더보드</b><small>BETA 전적 · 상위 50</small></button>
+          <span></span>
         </div>
         <div class="note">BETA 버전이에요. 캐릭터 · 밸런스 · 화면은 계속 바뀌어요.</div>
       </div>
@@ -473,6 +502,26 @@ input.text::placeholder { color:#555; }
 <div id="intro"></div>
 <div id="lifeFx"></div>
 <div class="modal" id="charModal"><div class="box cdp" id="charBox"></div></div>
+<!-- 리더보드 화면 -->
+<div id="screen-lb" class="screen dark grid-bg">
+  <div class="band">
+    <div class="top"><button class="btn back" data-back>← 뒤로</button><h2>리더보드</h2><span class="sp"></span><span class="pill" id="lbConn">오프라인</span></div>
+    <div class="lbme" id="lbMe"></div>
+    <div class="lbhead"><span>#</span><span>이름</span><span>LV</span><b>W</b><b>L</b></div>
+    <div class="lblist" id="lbList"></div>
+    <div class="note" style="text-align:center;margin-top:18px">BETA 기준 · 봇전을 포함한 누적 전적 · 시즌 기록은 정식 오픈부터 <button class="btn" id="lbRetry" style="padding:4px 12px;font-size:11px">다시 시도</button></div>
+  </div>
+</div>
+<!-- 업데이트 안내 (잠수함 패치 · 전작 UX 이식) -->
+<div class="update-overlay" id="updateOverlay" role="alertdialog" aria-modal="true">
+  <div class="update-card">
+    <span class="upico">↻</span>
+    <div class="v4-verswrap"><b id="updateCurrent">v0.6.0</b><span class="upico-arrow">→</span><b id="updateNext">v0.6.1</b></div>
+    <h2 id="updateTitle">새 버전이 도착했어요</h2>
+    <div class="note">새로고침하면 계속 플레이할 수 있어요</div>
+    <button class="btn primary big" id="btnUpdateReload">새로고침</button>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -569,6 +618,56 @@ function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(profile));
 function xpNeed(lv) { return 100 + 50 * (lv - 1); } // Lv1→2 100 · 이후 +50씩
 function addXp(n) { profile.xp += n; let up = 0; while (profile.xp >= xpNeed(profile.level)) { profile.xp -= xpNeed(profile.level); profile.level++; up++; } return up; }
 function owned(id) { return (profile.owned[id] || 0) > 0; }
+
+// ═════════ 리더보드 · Firebase (0.6.0 — 전작 jihoobattle 프로젝트 재사용) ═════════
+// 익명 인증으로 자기 문서(jhbt2lb/<uid>)만 쓰고, 전체는 읽는다. 규칙은 firestore.rules 참고.
+// 콘솔: Authentication → Sign-in method → **Anonymous 사용 설정** 필요.
+const FB = { sdk: null, app: null, auth: null, db: null, uid: null, on: false, ready: null, err: '' };
+const FB_CONFIG = window.JHBT2_FIREBASE_CONFIG || {
+  apiKey: 'AIzaSyDZVIcATuefAFSyL89XGDRuSwBclY5SclE',
+  authDomain: 'jihoobattle.firebaseapp.com',
+  projectId: 'jihoobattle',
+  storageBucket: 'jihoobattle.firebasestorage.app',
+  messagingSenderId: '829255397705',
+  appId: '1:829255397705:web:d4c7d3e3892ab4e9ce2a98'
+};
+function fbInit() {
+  if (FB.ready) return FB.ready;
+  FB.ready = (async () => {
+    try {
+      const version = '12.19.0';
+      const [appModule, authModule, firestoreModule] = await Promise.all([
+        import(`https://www.gstatic.com/firebasejs/${version}/firebase-app.js`),
+        import(`https://www.gstatic.com/firebasejs/${version}/firebase-auth.js`),
+        import(`https://www.gstatic.com/firebasejs/${version}/firebase-firestore.js`)
+      ]);
+      FB.sdk = { ...authModule, ...firestoreModule };
+      FB.app = appModule.initializeApp(FB_CONFIG);
+      FB.auth = authModule.getAuth(FB.app);
+      FB.db = firestoreModule.getFirestore(FB.app);
+      const cred = await authModule.signInAnonymously(FB.auth);
+      FB.uid = cred.user.uid; FB.on = true;
+    } catch (err) {
+      FB.err = String(err && err.code || err && err.message || err || 'unknown');
+      console.warn('[jhbt2] 리더보드 오프라인:', FB.err);
+    }
+    return FB.on;
+  })();
+  return FB.ready;
+}
+async function lbPush() { // 전적 갱신 후 호출 (실패해도 게임은 계속)
+  if (!FB.on) return;
+  try {
+    const ref = FB.sdk.doc(FB.db, 'jhbt2lb', FB.uid);
+    await FB.sdk.setDoc(ref, {
+      nickname: (profile.nick || '이름없음').slice(0, 12),
+      level: Math.min(999, profile.level | 0),
+      wins: Math.min(99999, profile.wins | 0),
+      losses: Math.min(99999, profile.losses | 0),
+      updatedAt: FB.sdk.serverTimestamp()
+    });
+  } catch (e) { console.warn('[jhbt2] 전적 업로드 실패', e); }
+}
 
 // ═════════ 화면 ═════════
 function show(name) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); $('screen-' + name).classList.add('active'); window.scrollTo(0, 0); if (name === 'battle') fitField(); }
@@ -1203,6 +1302,7 @@ function endMatch(win) {
   S.phase = 'idle';
   const xp = win ? 60 : 30, dia = win ? 80 : 30;
   const up = addXp(xp); profile.dia += dia; if (win) profile.wins++; else profile.losses++; save();
+  lbPush(); // 리더보드 전적 갱신 (오프라인이면 조용히 건너뜀)
   $('screen-result').classList.toggle('win', win);
   $('resTitle').textContent = win ? '승리' : '패배';
   $('resMeta').textContent = `MATCH RESULT · ${S.round} ROUNDS · VS ${S.nick ? S.nick.e : 'BOT'}`;
@@ -1281,15 +1381,123 @@ function cutscene(id, canSkip, done) {
 $('btnPull1').addEventListener('click', () => pull(1));
 $('btnPull10').addEventListener('click', () => pull(10));
 
+// ═════════ 리더보드 화면 ═════════
+const LB_TOP = 50;
+function lbRow(i, d, me) {
+  const w = Number(d.wins) || 0, l = Number(d.losses) || 0;
+  return `<div class="lbrow${i === 0 ? ' top1' : i === 1 ? ' top2' : i === 2 ? ' top3' : ''}${me ? ' me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(String(d.nickname || '?').slice(0, 12))}</span><span class="st">Lv.${clamp(Number(d.level) || 1, 1, 999)}</span><span class="st w">${w.toLocaleString()}</span><span class="st">${l.toLocaleString()}</span></div>`;
+}
+async function lbLoad() {
+  const list = $('lbList'), conn = $('lbConn');
+  conn.textContent = '연결 중…';
+  list.innerHTML = '<div class="lbrow load">불러오는 중…</div>';
+  list.querySelectorAll('.lbrow.me').forEach(() => {});
+  try {
+    const ok = await fbInit();
+    if (!ok) throw new Error(FB.err);
+    conn.textContent = '온라인';
+    // 내 문서가 없으면 먼저 업로드 (빈 전적도 등록)
+    const myRef = FB.sdk.doc(FB.db, 'jhbt2lb', FB.uid);
+    const myDoc = await FB.sdk.getDoc(myRef);
+    if (!myDoc.exists()) { await lbPush(); }
+    // 상위 50
+    const q = FB.sdk.query(FB.sdk.collection(FB.db, 'jhbt2lb'), FB.sdk.orderBy('wins', 'desc'), FB.sdk.limit(LB_TOP));
+    const snap = await FB.sdk.getDocs(q);
+    const rows = [];
+    let myIdx = -1;
+    snap.forEach(d => { rows.push({ uid: d.id, data: d.data() }); });
+    rows.forEach((r, i) => { if (r.uid === FB.uid) myIdx = i; });
+    if (!rows.length) { list.innerHTML = '<div class="lbrow load">아직 기록이 없어요 — 첫 승리를 달성해 주세요!</div>'; lbMe(null); return; }
+    list.innerHTML = rows.map((r, i) => lbRow(i, r.data, r.uid === FB.uid)).join('');
+    lbMe(myIdx >= 0 ? { rank: myIdx + 1, wins: rows[myIdx].data.wins } : { rank: '—', wins: profile.wins });
+    if (myIdx >= LB_TOP - 1) { // 밖에도 닉네임은 보여주자
+      lbMe({ rank: myIdx + 1, wins: rows[myIdx].data.wins });
+    }
+  } catch (err) {
+    conn.textContent = '오프라인';
+    list.innerHTML = `<div class="lbrow load">온라인 연결 실패 <span style="opacity:.6">(${String(err && err.message || err || '').slice(0, 40)})</span><br><span style="opacity:.7">전적은 기기에 저장돼요 · 곧 다시 시도해 주세요</span></div>`;
+    lbMe(null);
+  }
+}
+function lbMe(info) {
+  const el = $('lbMe');
+  el.innerHTML = info
+    ? `<span class="rk">${info.rank}<small>MY RANK</small></span><div><b>${esc(profile.nick || '이름없음')}</b><br><small>누적 전적 ${Number(info.wins) || 0} 승</small></div><span class="sp"></span><span class="pill">나</span>`
+    : `<span class="rk">—<small>MY RANK</small></span><div><b>${esc(profile.nick || '이름없음')}</b><br><small>온라인 기록 없음 · 게임 한 판 하면 올라가요</small></div><span class="sp"></span><span class="pill">로컬</span>`;
+}
+
+// ═════════ 업데이트 시스템 · 잠수함 패치 (전작 5.7.5 이식) ═════════
+// 서버의 index.html 앞 4KB만 읽어 배포 버전(메타 태그)을 확인한다. 전체 다운로드는 새로고침할 때만.
+const UPDATE_CHECK_MS = 5 * 60 * 1000;
+let pendingUpdateVersion = null;
+function gameVersion() { return document.querySelector('meta[name="jhbt2-version"]')?.content || '0'; }
+function gameBuild() { return Number(document.querySelector('meta[name="jhbt2-build"]')?.content) || 0; }
+function compareVersions(a, b) { return String(a).localeCompare(String(b), undefined, { numeric: true }); }
+async function fetchDeployedVersion() {
+  if (location.protocol === 'file:') return null;
+  const response = await fetch(location.href.split(/[?#]/)[0] + '?vc=' + Date.now(), { cache: 'no-store', headers: { Range: 'bytes=0-4095' } });
+  if (!response.ok || !response.body) return null;
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let head = '';
+  try {
+    while (head.length < 16384) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      head += decoder.decode(value, { stream: true });
+      const match = head.match(/<meta name="jhbt2-version" content="([^"]+)"/);
+      const build = head.match(/<meta name="jhbt2-build" content="(\d+)"/);
+      if (match && (build || head.length > 2048)) return { version: match[1], build: build ? Number(build[1]) : 0 };
+    }
+    return null;
+  } finally {
+    reader.cancel().catch(() => {});
+  }
+}
+function updatePeekOk() { // 전투 도중(배치/전투/라운드 끝)엔 기다렸다가 뜬다
+  return !S.phase || S.phase === 'idle';
+}
+async function checkForUpdate() {
+  if (location.protocol === 'file:') return;
+  try {
+    const deployed = await fetchDeployedVersion();
+    if (!deployed) return;
+    const cmp = compareVersions(deployed.version, gameVersion());
+    if (cmp > 0 || (cmp === 0 && deployed.build > gameBuild())) {
+      pendingUpdateVersion = deployed.version;
+      if (updatePeekOk()) showUpdateOverlay();
+    }
+  } catch (err) {}
+}
+function showUpdateOverlay() {
+  if (!pendingUpdateVersion) return;
+  $('updateCurrent').textContent = 'v' + gameVersion();
+  $('updateNext').textContent = 'v' + pendingUpdateVersion;
+  $('updateOverlay').classList.add('show');
+}
+$('btnUpdateReload').addEventListener('click', () => {
+  location.replace(location.pathname + '?v=' + encodeURIComponent((pendingUpdateVersion || gameVersion()) + '-' + Date.now().toString(36)) + location.hash);
+});
+function startUpdateChecks() {
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+  setInterval(() => { if (document.visibilityState === 'visible') checkForUpdate(); }, UPDATE_CHECK_MS);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkForUpdate(); });
+}
+
 // ═════════ 시작 ═════════
 document.querySelectorAll('[data-back]').forEach(b => b.addEventListener('click', () => { renderLobby(); show('lobby'); }));
 $('btnPlay').addEventListener('click', newMatch);
 $('btnDeck').addEventListener('click', () => { renderDeck(); show('deck'); });
 $('btnGacha').addEventListener('click', () => { renderGacha(); show('gacha'); });
+$('btnLb').addEventListener('click', () => { show('lb'); lbLoad(); });
+$('lbRetry').addEventListener('click', lbLoad);
 $('btnResOk').addEventListener('click', () => { renderLobby(); show('lobby'); });
 $('btnStart').addEventListener('click', () => { const n = $('nickInput').value.trim(); if (!n) return banner('닉네임을 넣어 주세요'); profile.nick = n.slice(0, 12); save(); renderLobby(); show('lobby'); });
 if (profile.nick) { renderLobby(); show('lobby'); } else show('welcome');
-window.__jb2 = { S, CHARS, CFG, A, profile: () => profile, newMatch, summon, doDrop, startCombat, pull, rollRarity, makeUnit, stepCombat }; // BETA 테스트용
+startUpdateChecks(); // PWA 등록 + 5분마다 새 버전 확인
+window.__jb2 = { S, CHARS, CFG, A, profile: () => profile, newMatch, summon, doDrop, startCombat, pull, rollRarity, makeUnit, stepCombat, lbLoad, lbPush, fbInit }; // BETA 테스트용
 })();
 </script>
 </body>

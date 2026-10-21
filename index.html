@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="2.2"><meta name="jhbt2-build" content="2"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="2.2"><meta name="jhbt2-build" content="3"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -1537,6 +1537,7 @@ function stepUnit(u, dt) {
   const sk = u.def.skill;
   if (sk && sk.type === 'cooldown' && !u.st.silence && !blocked(u)) { u.sk = Math.min(sk.cd, u.sk + dt); if (u.sk >= sk.cd) castSkill(u); }
   if (sk && sk.type === 'sec' && !u.skillDone && !u.st.silence && !blocked(u)) { u.sk = Math.min(sk.need, u.sk + dt); if (u.sk >= sk.need) { if (sk.once) u.skillDone = true; castSkill(u); if (!u.alive) return; } } // 초당 SP 1
+  if (sk || u.def.gauge) drawUnit(u); // SP · 쿨타임 게이지는 피해를 받지 않아도 매 프레임 차오른다
   aiSteerAndAttack(u, dt);
 }
 function aiSteerAndAttack(u, dt) {

@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="0.3.0">
+<meta name="jhbt2-version" content="0.3.1">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -336,8 +336,8 @@ const CHARS = {
     passive: '' },
   assassin: { name: '암살 지후', rarity: 'common', role: '어쌔신', hp: 2200, atk: 160, atkSpeed: 0.7, range: 'melee', speed: 1, portrait: PORTRAITS.assassin, starter: true, color: '#e84393',
     story: '남들처럼 평범한 갈색 머리로 염색을 하고싶었으나 미용사가 말을 잘못 알아들어 핑크색 머리로 염색해주자, 해당 미용실에 원한을 품고 미용사를 암살하기 위해 다시 태어났습니다.',
-    passive: '게임 시작 <b>2초</b> 뒤 가장 멀리 있는 적의 <b>후방</b>으로 순간이동하고 <b>1초</b> 동안 [은신]. 순간이동 뒤 첫 공격은 공격력의 <b>400%</b>.',
-    tick(u, dt, A) { if (u.blinked) return; u.blinkT = (u.blinkT || 0) + dt; if (u.blinkT >= 2) { u.blinked = true; A.blinkBehindFarthest(u); A.status(u, 'stealth', 1); u.nextHitPct = 400; } } },
+    passive: '게임 시작 <b>2초</b> 뒤 가장 멀리 있는 적의 <b>후방</b>으로 순간이동하고 <b>1초</b> 동안 [은신]. 순간이동 뒤 첫 공격은 <b>대상 하나</b>에게 공격력의 <b>400%</b>.',
+    tick(u, dt, A) { if (u.blinked) return; u.blinkT = (u.blinkT || 0) + dt; if (u.blinkT >= 2) { u.blinked = true; A.blinkBehindFarthest(u); A.status(u, 'stealth', 1); u.nextHitPct = 400; u.nextHitSingle = true; } } },
   shield: { name: '쉴드 지후', rarity: 'common', role: '탱커', hp: 3000, shield: 1500, atk: 350, atkSpeed: 3, range: 'melee', speed: 1, portrait: PORTRAITS.shield, portraitBroken: PORTRAITS.shield_broken, starter: true, color: '#4f7cff',
     story: "자청해서 고기방패가 되기로 한 지후입니다. 최근에는 그의 특별한 '취향'에 대해 루머가 돌고 있다고 하지만.. 쉴드 지후는 순수하게 마음씨가 착해서 그런거에요.",
     passive: '쉴드가 있는 동안 <b>모든 상태이상에 면역</b>이고 받는 피해 <b>-25%</b>.',
@@ -574,10 +574,11 @@ function performAttack(u, t) {
   fireTelegraph(u); // 예고가 가득 찬 순간 = 공격 발동
   if (u.el) { u.el.style.filter = 'brightness(1.3)'; setTimeout(() => u.el && (u.el.style.filter = ''), 120); }
   if (u.melee) attackLunge(u, t);
-  const pct = u.nextHitPct || 100; u.nextHitPct = 0;
+  const pct = u.nextHitPct || 100, single = !!u.nextHitSingle; u.nextHitPct = 0; u.nextHitSingle = false;
   const dmg = effAtk(u) * pct / 100, opts = pct > 100 ? { skill: true } : {};
   const hitOne = e => { const done = dealDamage(u, e, dmg, opts); if (done > 0 && u.def.onHit) u.def.onHit(u, e, A); return done; };
-  if (u.melee) { // 120° 부채꼴 광역 타격
+  if (u.melee && single) { spawnSlash(u, t); afterHit(u, hitOne(t)); } // 대상 하나만 (암살 첫 공격 등)
+  else if (u.melee) { // 120° 부채꼴 광역 타격
     const a0 = Math.atan2(t.y - u.y, t.x - u.x), half = Math.PI / 3, reach = Math.max(u.range + 8, bodySeparation(u, t) + 8);
     spawnSlash(u, t);
     let any = 0; foes(u).forEach(e => { if (inFan(u, e, a0, half, reach)) any += hitOne(e); });

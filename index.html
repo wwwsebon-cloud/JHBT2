@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="0.8.0"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="0.9.0"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -86,6 +86,96 @@ a { color:inherit; }
 .btn.play .go { width:44px; height:44px; border-radius:50%; background:var(--ink); color:var(--paper); display:grid; place-items:center; font-size:14px; position:relative; }
 .btn.play.sm { padding:18px; border-radius:14px; } .btn.play.sm b { font:900 18px 'Pretendard Variable', sans-serif; letter-spacing:0; }
 .menu2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+/* 카메라 (전작 확대 · 이동 · 미니맵) */
+.fieldwrap { overflow:hidden; height:clamp(240px, calc(100vh - 300px), 780px); border-radius:14px; touch-action:none; cursor:grab; background:#e8e8e5; }
+.fieldwrap.panning { cursor:grabbing; }
+.camzoom { position:absolute; z-index:30; right:10px; top:10px; display:flex; align-items:center; gap:4px; background:rgba(255,255,255,.92); border:1px solid #111; border-radius:999px; padding:3px; }
+.camzoom button { width:28px; height:28px; border-radius:50%; border:0; background:#111; color:#fff; font:900 14px var(--mono); display:grid; place-items:center; padding:0; }
+.camzoom span { min-width:42px; text-align:center; font:800 10px var(--mono); }
+.minimap { position:absolute; z-index:30; right:10px; bottom:10px; border:1px solid #111; border-radius:6px; overflow:hidden; background:#f8f8f6; cursor:pointer; }
+.minimap canvas { display:block; width:100%; height:100%; }
+#field.cinematic { transition:transform 2s cubic-bezier(.12,.72,.18,1); }
+/* 사거리 원 (전작: 지후를 누르면 사거리를 점선 원으로) */
+.unit-range-ring { position:absolute; border-radius:50%; border:2px dashed rgba(30,30,30,.7); background:rgba(90,150,255,.06); transform:translate(-50%,-50%); pointer-events:none; z-index:3; }
+.unit-range-ring.enemy { border-color:rgba(200,40,40,.75); background:rgba(255,80,80,.06); }
+/* 마지막 순간 (전작 final moment) */
+.final-moment-overlay { position:absolute; inset:0; z-index:35; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; padding-top:clamp(28px,9vh,80px); gap:9px; pointer-events:none; opacity:0; visibility:hidden; color:#fff; text-align:center; background:rgba(0,0,0,.32); transition:opacity .2s; }
+.final-moment-overlay.show { opacity:1; visibility:visible; }
+.final-moment-overlay::before { content:""; position:absolute; left:50%; top:50%; translate:-50% -50%; width:min(60vw,380px); aspect-ratio:1; border:1px solid rgba(255,255,255,.75); border-radius:50%; animation:final-ring 2s ease-out both; }
+.final-moment-kicker { z-index:1; font:900 11px var(--mono); letter-spacing:.32em; color:#ddd; }
+.final-moment-overlay strong { z-index:1; font:900 clamp(26px,5vw,52px) var(--display); letter-spacing:-.06em; animation:final-title 2s ease-out both; }
+.final-moment-sub { z-index:1; color:#ddd; font-size:12px; }
+@keyframes final-ring { from { transform:scale(.6); opacity:0; } 30% { opacity:1; } to { transform:scale(1.4); opacity:0; } }
+@keyframes final-title { from { transform:scale(1.18); opacity:0; } 30% { transform:scale(1); opacity:1; } to { opacity:.85; } }
+.fieldwrap.final-moment .unit.dead { transition:transform 1.85s ease, opacity 1.8s ease !important; }
+.fieldwrap.final-moment .unit.final-drift { animation:final-drift 2s cubic-bezier(.15,.75,.25,1) both; }
+@keyframes final-drift { from { translate:0 0; } to { translate:var(--final-dx) var(--final-dy); } }
+.fieldwrap.final-moment .fx-death-fx .death-ring { animation-duration:1.85s; } .fieldwrap.final-moment .fx-death-fx .death-shard { animation-duration:1.9s; }
+/* 일일 퀘스트 (전작 4.4.1) */
+.quest { position:relative; max-width:760px; margin:0 auto; min-height:100vh; padding:0 24px 40px; }
+.qpts { border:1px solid #333; border-radius:14px; padding:16px 18px; margin:6px 0 14px; background:rgba(255,255,255,.03); }
+.qpts .big { font:900 34px var(--mono); } .qpts .big small { font:800 12px var(--mono); color:#8f8f8c; margin-left:6px; }
+.qbar { position:relative; height:8px; border-radius:8px; background:#2a2a29; margin:12px 0 18px; }
+.qbar > i { position:absolute; left:0; top:0; bottom:0; border-radius:8px; background:var(--paper); transition:width .6s; }
+.qbar .tk { position:absolute; top:50%; width:14px; height:14px; margin:-7px 0 0 -7px; border-radius:50%; background:#2a2a29; border:2px solid #555; }
+.qbar .tk.on { background:var(--paper); border-color:var(--paper); }
+.qtiers { display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:8px; }
+.qtier { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 6px; border:1px solid #333; border-radius:12px; background:transparent; color:var(--paper); font:800 10px var(--mono); }
+.qtier b { font:900 14px var(--mono); } .qtier span { color:#8f8f8c; text-align:center; line-height:1.4; }
+.qtier.ready { border-color:#f7ce46; box-shadow:0 0 0 2px rgba(247,206,70,.3); cursor:pointer; } .qtier.ready span { color:#f7ce46; }
+.qtier.done { opacity:.4; }
+.qlist { display:flex; flex-direction:column; gap:8px; margin-top:18px; }
+.qrow { display:grid; grid-template-columns:1fr auto; gap:6px 12px; align-items:center; padding:12px 14px; border:1px solid #2a2a29; border-radius:12px; }
+.qrow b { font-size:14px; } .qrow .pt { font:900 12px var(--mono); color:#8f8f8c; } .qrow.done .pt { color:#f7ce46; }
+.qrow .pb { grid-column:1 / -1; height:4px; border-radius:4px; background:#2a2a29; overflow:hidden; } .qrow .pb i { display:block; height:100%; background:var(--paper); }
+.qrow.done { border-color:#444; } .qrow.done b { text-decoration:line-through; opacity:.6; }
+.btn.tile .dot { position:absolute; top:10px; right:12px; width:9px; height:9px; border-radius:50%; background:#e5322d; box-shadow:0 0 0 3px rgba(229,50,45,.25); }
+.btn.tile { position:relative; } .btn.tile.full { grid-column:1 / -1; }
+/* 경기 통계 (전작) */
+#statsModal .box { max-width:720px; max-height:88vh; overflow:auto; padding:18px; color:var(--ink); }
+.ms-head { display:flex; align-items:center; gap:10px; margin-bottom:10px; } .ms-head h3 { margin:0; font:900 22px var(--display); letter-spacing:-.04em; }
+.ms-seg { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:8px; }
+.ms-seg button { border:1px solid #111; background:#fff; border-radius:999px; padding:5px 12px; font:800 11px var(--mono); }
+.ms-seg button.on { background:#111; color:#fff; }
+.ms-cols { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:10px; }
+.ms-col .h { display:flex; align-items:center; gap:6px; font:900 12px var(--mono); letter-spacing:.1em; margin-bottom:6px; } .ms-col .h i { width:8px; height:8px; border-radius:50%; }
+.ms-row { display:grid; grid-template-columns:34px 1fr; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid #e6e6e3; }
+.ms-row .pic { width:34px; height:34px; border-radius:50%; overflow:hidden; border:1.5px solid #111; } .ms-row .pic img { width:100%; height:100%; object-fit:cover; }
+.ms-row .t { display:flex; justify-content:space-between; font-size:12px; font-weight:900; } .ms-row .t span:last-child { font-family:var(--mono); }
+.ms-row .bar { height:5px; border-radius:5px; background:#ecece9; overflow:hidden; margin:3px 0; } .ms-row .bar b { display:block; height:100%; animation:growX .5s backwards; transform-origin:left; }
+.ms-row .sub { font:700 10px var(--mono); color:#888; }
+.ms-mvp { display:flex; align-items:center; gap:10px; margin-top:12px; padding:10px 12px; border-radius:12px; background:#111; color:#fff; font-size:13px; }
+.ms-mvp.e { background:#fff; color:#111; border:1px solid #e5322d; }
+.ms-mvp .k { font:900 10px var(--mono); letter-spacing:.2em; } .ms-mvp .pic { width:30px; height:30px; border-radius:50%; overflow:hidden; } .ms-mvp .pic img { width:100%; height:100%; object-fit:cover; } .ms-mvp .v { margin-left:auto; font:800 11px var(--mono); opacity:.8; }
+@media (max-width:640px) { .ms-cols { grid-template-columns:1fr; } }
+/* 햄버거 메뉴 (전작 메뉴 서랍) */
+.menu-btn { width:36px; height:36px; padding:0; border-radius:50%; font-size:16px; }
+#menuModal { place-items:stretch end; padding:0; }
+#menuModal .drawer { width:min(360px, 100vw); height:100%; background:var(--dark); color:var(--paper); display:flex; flex-direction:column; padding:18px 20px 22px; animation:drawerIn .35s cubic-bezier(.2,.9,.1,1); }
+@keyframes drawerIn { from { transform:translateX(100%); } }
+#menuModal .dh { display:flex; align-items:center; font:800 11px var(--mono); letter-spacing:.3em; color:#8f8f8c; margin-bottom:18px; } #menuModal .dh .btn { margin-left:auto; width:34px; height:34px; padding:0; }
+.mlist { display:flex; flex-direction:column; }
+.mlist button { display:flex; align-items:center; gap:14px; padding:16px 4px; border:0; border-bottom:1px solid #2a2a29; background:transparent; color:var(--paper); text-align:left; animation:rise .35s backwards; }
+.mlist .n { font:800 11px var(--mono); color:#8f8f8c; width:22px; } .mlist .t { flex:1; font:900 20px var(--display); letter-spacing:-.03em; } .mlist .a { color:#8f8f8c; }
+.mver { margin-top:auto; font:800 10px var(--mono); letter-spacing:.2em; color:#555; }
+.pane .box { max-width:560px; max-height:86vh; overflow:auto; padding:20px; color:var(--ink); }
+.pane h3 { margin:0 0 12px; font:900 24px var(--display); letter-spacing:-.04em; display:flex; align-items:center; } .pane h3 .btn { margin-left:auto; width:34px; height:34px; padding:0; }
+.pane .tabs { display:flex; gap:4px; margin-bottom:12px; } .pane .tabs button { border:1px solid #111; background:#fff; border-radius:999px; padding:5px 12px; font:800 11px var(--mono); } .pane .tabs button.on { background:#111; color:#fff; }
+.pn { border-top:1px solid #e1e1de; padding:12px 0; } .pn .vh { display:flex; align-items:baseline; gap:8px; } .pn .vh b { font:900 16px var(--mono); } .pn .vh small { font:700 10px var(--mono); color:#888; }
+.pn ul { margin:6px 0 0; padding-left:18px; font-size:13px; line-height:1.7; color:#333; }
+.help p, .help li { font-size:13px; line-height:1.75; color:#333; } .help ul { padding-left:18px; margin:6px 0; } .help h4 { margin:14px 0 4px; font-size:14px; }
+.stl { display:grid; grid-template-columns:30px 70px 1fr; gap:6px 10px; align-items:center; font-size:13px; } .stl b { font-weight:900; }
+.setrow { display:flex; align-items:center; gap:12px; padding:12px 0; border-top:1px solid #e1e1de; font-size:14px; font-weight:800; } .setrow .sp { flex:1; }
+.setrow input[type=range] { width:160px; accent-color:#111; } .setrow input.nick { border:1px solid #111; border-radius:10px; padding:8px 10px; font:inherit; width:150px; }
+.codein { width:100%; border:1px solid #111; border-radius:12px; padding:12px 14px; font:900 18px var(--mono); letter-spacing:.15em; text-transform:uppercase; }
+.codemsg { min-height:20px; margin:10px 0; font-size:12px; color:#555; }
+/* 레벨업 (전작 level-up 창) */
+#levelUp .box { padding:30px 24px 22px; display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; color:var(--ink); position:relative; overflow:hidden; }
+#levelUp .shock { position:absolute; left:50%; top:72px; width:120px; height:120px; margin:-60px 0 0 -60px; border-radius:50%; border:3px solid #111; animation:lvShock 1.2s ease-out infinite; }
+@keyframes lvShock { from { transform:scale(.6); opacity:1; } to { transform:scale(1.8); opacity:0; } }
+#levelUp .num { width:84px; height:84px; border-radius:50%; background:#111; color:#fff; display:grid; place-items:center; font:900 34px var(--mono); animation:slam .5s cubic-bezier(.2,.8,.2,1); }
+#levelUp h3 { margin:6px 0 0; font:900 32px var(--display); letter-spacing:-.04em; }
+#levelUp .rw { font:900 16px var(--mono); padding:6px 14px; border-radius:999px; background:#f7ce46; }
 /* 상점 (전작 일일 상점) */
 .shop { position:relative; max-width:1000px; margin:0 auto; min-height:100vh; padding:0 24px 40px; }
 .shop .pill b { font-family:var(--mono); }
@@ -342,7 +432,7 @@ input.text::placeholder { color:#555; }
 .subhud { display:flex; align-items:center; gap:10px; padding:10px 18px 0; max-width:1136px; margin:0 auto; }
 .phase { display:flex; align-items:center; gap:8px; font:800 11px var(--mono); color:#666; letter-spacing:.1em; white-space:nowrap; }
 .phase i { width:6px; height:6px; border-radius:50%; background:#111; animation:blinkDot 1s infinite; }
-.fieldwrap { position:relative; width:calc(100% - 36px); max-width:1100px; margin:10px auto 0; }
+.fieldwrap { position:relative; width:calc(100% - 36px); max-width:1100px; margin:10px auto 0; } /* 높이 · 카메라는 아래 '카메라' 참고 */
 #field { position:relative; transform-origin:0 0; background:#fff repeating-linear-gradient(90deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px), repeating-linear-gradient(0deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px); border:1px solid #111; border-radius:14px; overflow:hidden; }
 #field::after { content:''; position:absolute; left:50%; top:0; bottom:0; border-left:2px dashed rgba(0,0,0,.22); }
 #field.ns::after { left:0; right:0; top:50%; bottom:auto; border-left:0; border-top:2px dashed rgba(0,0,0,.22); }
@@ -513,7 +603,7 @@ input.text::placeholder { color:#555; }
 <!-- 로비 -->
 <div id="screen-lobby" class="screen dark grid-bg">
   <div class="lobby">
-    <div class="top"><span class="pill me"><span class="av" id="lobbyAv">지</span><b id="lobbyNick">닉네임</b></span><span class="sp"></span><span class="pill mono">● <b id="lobbyGold">0</b></span><span class="pill mono">◆ <b id="lobbyDia">0</b></span></div>
+    <div class="top"><span class="pill me"><span class="av" id="lobbyAv">지</span><b id="lobbyNick">닉네임</b></span><span class="sp"></span><span class="pill mono">● <b id="lobbyGold">0</b></span><span class="pill mono">◆ <b id="lobbyDia">0</b></span><button class="btn menu-btn" id="btnMenu" aria-label="메뉴">☰</button></div>
     <div class="lobby-grid">
       <div class="lobby-hero">
         <div><div class="eyebrow">JIHOO BATTLE 2</div><div class="logo">지후배틀<br>2</div><span class="beta">BETA</span></div>
@@ -531,6 +621,7 @@ input.text::placeholder { color:#555; }
           <button class="btn tile" id="btnGacha"><b>뽑기</b><small>◆100 / ◆1,000</small></button>
           <button class="btn tile" id="btnLb"><b>리더보드</b><small>BETA 전적 · 상위 50</small></button>
           <button class="btn tile" id="btnShop"><b>상점</b><small>오늘의 매물 · 이모티콘</small></button>
+          <button class="btn tile full" id="btnQuest"><b>일일 퀘스트</b><small id="questSmall">0 / 700P</small><span class="dot" id="questDot" hidden></span></button>
         </div>
         <div class="note">BETA 버전이에요. 캐릭터 · 밸런스 · 화면은 계속 바뀌어요.</div>
       </div>
@@ -568,6 +659,15 @@ input.text::placeholder { color:#555; }
     </div>
   </div>
 </div>
+<!-- 일일 퀘스트 (전작 4.4.1) -->
+<div id="screen-quest" class="screen dark grid-bg">
+  <div class="quest">
+    <div class="top"><button class="btn back" data-back>← 로비</button><h2>일일 퀘스트</h2><span class="sp"></span><span class="pill mono" id="questReset"></span></div>
+    <div class="qpts"><span class="eyebrow">TODAY'S POINTS</span><div class="big"><span id="qPoints">0</span><small>/ <span id="qGoal">700</span>P</small></div><div class="qbar" id="qBar"></div><div class="qtiers" id="qTiers"></div></div>
+    <div class="note" id="qMsg"></div>
+    <div class="qlist" id="qList"></div>
+  </div>
+</div>
 <!-- 상점 (전작 일일 상점 · 팝업스토어 없음) -->
 <div id="screen-shop" class="screen dark grid-bg">
   <div class="shop">
@@ -590,8 +690,8 @@ input.text::placeholder { color:#555; }
     <div class="mid"><span class="rd">ROUND <b id="hudRound">1</b></span><b class="timer" id="hudTimer">준비</b><span class="pill speedtag" id="hudSpeed" hidden>×2</span></div>
     <div class="side e"><div class="who"><span class="av" id="hudAvE">봇</span><div><b id="hudNickE">상대</b><div class="lives" id="hudLivesE"></div></div></div><div class="mini-deck" id="hudDeckE"></div></div>
   </div>
-  <div class="subhud"><span class="pill dark" id="hudCount">유닛 0/10</span><span class="hodds" id="hudOdds" hidden></span><span class="sp"></span><span class="phase" id="hudPhase"><i></i><span>배치 단계</span></span></div>
-  <div class="fieldwrap" id="fieldWrap"><div id="field"></div></div>
+  <div class="subhud"><span class="pill dark" id="hudCount">유닛 0/10</span><span class="hodds" id="hudOdds" hidden></span><span class="sp"></span><button class="btn" id="btnStatsHud" style="padding:6px 12px;font-size:12px">📊 통계</button><span class="phase" id="hudPhase"><i></i><span>배치 단계</span></span></div>
+  <div class="fieldwrap" id="fieldWrap"><div id="field"></div><div class="camzoom" id="camZoom"><button id="btnZoomOut" aria-label="축소">−</button><span id="zoomLab">100%</span><button id="btnZoomIn" aria-label="확대">+</button><button id="btnZoomFit" aria-label="전체 보기">⤢</button></div><div class="minimap" id="miniMap"><canvas id="miniMapCanvas" width="308" height="196"></canvas></div><div class="final-moment-overlay" id="finalMoment"><span class="final-moment-kicker">FINAL MOMENT</span><strong>마지막 순간</strong><span class="final-moment-sub">전투 결과를 확인하고 있습니다</span></div></div>
   <div class="dock">
     <div class="pool" id="pool"></div>
     <div class="controls">
@@ -604,7 +704,7 @@ input.text::placeholder { color:#555; }
 </div>
 <!-- 결과 -->
 <div id="screen-result" class="screen">
-  <div class="result"><span class="eyebrow" id="resMeta">MATCH RESULT</span><h1 id="resTitle">승리</h1><div class="rounds" id="resRounds"></div><div class="res-box" id="resBody"></div><button class="btn primary big wide" id="btnResOk">로비로</button></div>
+  <div class="result"><span class="eyebrow" id="resMeta">MATCH RESULT</span><h1 id="resTitle">승리</h1><div class="rounds" id="resRounds"></div><div class="res-box" id="resBody"></div><button class="btn wide" id="btnResStats">📊 경기 통계</button><button class="btn primary big wide" id="btnResOk">로비로</button></div>
 </div>
 <!-- 오버레이 -->
 <div id="reveal"><div id="revealStage"></div></div>
@@ -612,6 +712,19 @@ input.text::placeholder { color:#555; }
 <div id="intro"></div>
 <div id="lifeFx"></div>
 <div class="modal" id="charModal"><div class="box cdp" id="charBox"></div></div>
+<div class="modal" id="statsModal"><div class="box"><div class="ms-head"><h3>경기 통계</h3><span class="sp"></span><button class="btn" id="btnStatsClose">닫기</button></div><div id="msTabs"></div><div id="msBody"></div></div></div>
+<div class="modal" id="menuModal"><div class="drawer"><div class="dh">MENU<button class="btn" data-close="menuModal">✕</button></div>
+  <div class="mlist">
+    <button id="btnMenuCode" style="animation-delay:.04s"><span class="n">01</span><span class="t">코드 입력</span><span class="a">↗</span></button>
+    <button id="btnMenuPatch" style="animation-delay:.08s"><span class="n">02</span><span class="t">패치노트</span><span class="a">↗</span></button>
+    <button id="btnMenuHelp" style="animation-delay:.12s"><span class="n">03</span><span class="t">도움말</span><span class="a">↗</span></button>
+    <button id="btnMenuSettings" style="animation-delay:.16s"><span class="n">04</span><span class="t">환경설정</span><span class="a">↗</span></button>
+  </div><div class="mver">JHBT2 · v<span id="menuVer"></span></div></div></div>
+<div class="modal pane" id="codeModal"><div class="box"><h3>코드 입력<button class="btn" data-close="codeModal">✕</button></h3><input class="codein" id="codeInput" maxlength="24" autocomplete="off" spellcheck="false" placeholder="쿠폰 코드"><div class="codemsg" id="codeMsg">코드는 영어 대문자와 숫자로만 되어 있어요. 코드마다 한 번 쓸 수 있습니다.</div><button class="btn primary wide" id="btnCodeOk">확인</button></div></div>
+<div class="modal pane" id="patchModal"><div class="box"><h3>패치노트<button class="btn" data-close="patchModal">✕</button></h3><div id="patchBody"></div></div></div>
+<div class="modal pane" id="helpModal"><div class="box"><h3>도움말<button class="btn" data-close="helpModal">✕</button></h3><div class="tabs" id="helpTabs"></div><div class="help" id="helpBody"></div></div></div>
+<div class="modal pane" id="setModal"><div class="box"><h3>환경설정<button class="btn" data-close="setModal">✕</button></h3><div id="setBody"></div></div></div>
+<div class="modal" id="levelUp"><div class="box"><span class="shock"></span><span class="num" id="lvNum">2</span><h3>LEVEL UP!</h3><p class="note" id="lvMsg" style="margin:0"></p><span class="rw" id="lvReward">◆ 100</span><button class="btn primary wide" id="btnLvOk">확인</button></div></div>
 <div class="modal" id="dlg"><div class="box"><span class="ico" id="dlgIco"></span><h3 id="dlgTitle"></h3><div class="bd" id="dlgBody"></div><div class="bt"><button class="btn" id="dlgNo">취소</button><button class="btn primary" id="dlgOk">확인</button></div></div></div>
 <!-- 리더보드 화면 -->
 <div id="screen-lb" class="screen dark grid-bg">
@@ -656,6 +769,7 @@ const CFG = {
   GACHA: [['legend', 1], ['epic', 4], ['rare', 30], ['common', 65]],
   PULL1: 100, PULL10: 1000,
   START_DIA: 1500,
+  LEVEL_REWARD: 100,                       // 계정 레벨업마다 ◆100
 };
 const RARITY = { common: '일반', rare: '희귀', epic: '영웅', legend: '전설' };
 const RARITY_ORDER = { common: 0, rare: 1, epic: 2, legend: 3 };
@@ -678,7 +792,7 @@ const CHARS = {
   fire: { name: '화염 지후', rarity: 'common', role: '딜러', hp: 1000, atk: 45, atkSpeed: 3, range: 2, speed: 1.6, portrait: PORTRAITS.fire, starter: true, color: '#ff6b35',
     story: '삼겹살을 구워먹다가 부루스타가 폭주해서 전신 화상을 당한 지후입니다. 하지만 그의 불타오르는 삶의 의지와 열정은 곧 불씨로 되살아났어요. 특기는 가스라이팅.',
     passive: '일반 공격이 <b>5초</b> 동안 1초마다 공격력의 <b>110%</b> [화상] 피해를 입힌다. [화상]은 <b>중첩</b>된다.',
-    onHit(u, t, A) { A.status(t, 'burn', 5, { dps: u.atk * 1.1, stack: true }); } },
+    onHit(u, t, A) { A.status(t, 'burn', 5, { dps: u.atk * 1.1, stack: true, src: u }); } },
   ice: { name: '얼음 지후', rarity: 'common', role: '컨트롤러', hp: 900, atk: 33, atkSpeed: 4, range: 3, speed: 1.6, portrait: PORTRAITS.ice, starter: true, color: '#4fc3f7',
     story: '집에서 실수로 에어컨을 끄지 않고 잠을 자는 바람에 상시로 감기 상태입니다. 그는 격리 처리 당했고, 결국 그도 세상에 등을 돌리고 냉정해졌습니다.',
     passive: '일반 공격이 대상을 <b>1.6초</b> 동안 [빙결]시킨다.',
@@ -792,6 +906,7 @@ function renderLobby() {
   $('lobbyNick').textContent = profile.nick || '닉네임'; $('lobbyAv').textContent = (profile.nick || '지').slice(0, 1); $('lobbyDia').textContent = profile.dia.toLocaleString(); $('lobbyGold').textContent = (profile.gold || 0).toLocaleString();
   $('lobbyLv').textContent = profile.level; $('lobbyXp').textContent = `${profile.xp} / ${xpNeed(profile.level)} XP`;
   $('lobbyXpBar').style.width = (profile.xp / xpNeed(profile.level) * 100).toFixed(1) + '%';
+  if (typeof renderQuestDot === 'function' && profile.daily) renderQuestDot();
   $('lobbyDeck').innerHTML = Array.from({ length: 5 }, (_, i) => { const id = profile.deck[i]; return `<span class="ld" title="${id ? CHARS[id].name : ''}">${id ? pic(id) : '+'}</span>`; }).join('');
 }
 function banner(text) { const b = document.createElement('div'); b.className = 'banner'; b.textContent = text; document.body.appendChild(b); setTimeout(() => b.remove(), 1300); }
@@ -896,10 +1011,10 @@ function dealDamage(src, t, amount, opts = {}) {
   const hadShield = t.shield > 0, abs = Math.min(t.shield, d); t.shield -= abs; const hpDmg = d - abs;
   if (hadShield && t.shield <= 0 && t.def.portraitBroken && t.el) { const img = t.el.querySelector('.unit-icon img'); if (img) img.src = t.def.portraitBroken; dmgNum(t, '쉴드 깨짐', { crit: true }); }
   t.hp -= hpDmg;
-  if (d > 0) { S.lastDmgAt = S.time; if (src) src.dmgDealt = (src.dmgDealt || 0) + d; }
+  if (d > 0) { S.lastDmgAt = S.time; t.dmgTaken = (t.dmgTaken || 0) + d; if (src) src.dmgDealt = (src.dmgDealt || 0) + d; }
   dmgNum(t, d, { critHit: opts.skill, dot: opts.dot });
   if (!opts.dot) { hitFlash(t, opts.skill); if (t.def.skill && t.def.skill.type === 'mana' && !t.st.silence) t.sk = Math.min(t.def.skill.need, t.sk + 6); }
-  if (t.hp <= 0) { t.hp = 0; killUnit(t); }
+  if (t.hp <= 0) { t.hp = 0; if (src && src !== t) src._kills = (src._kills || 0) + 1; killUnit(t); }
   drawUnit(t);
   return d;
 }
@@ -911,11 +1026,13 @@ function addStatus(t, key, sec, extra) {
   if (!t.alive) return;
   if (!(STATUS[key] && STATUS[key].buff) && immune(t)) return; /* 면역 */
   if (STATUS[key] && STATUS[key].block && (blocked(t) || t._ccImm > 0)) return;
-  if (extra && extra.stack) { const L = (t.stk || (t.stk = {}))[key] || (t.stk[key] = []); L.push({ left: sec, acc: 0, dps: extra.dps }); t.st[key] = Math.max(t.st[key] || 0, sec); drawUnit(t); return; } // 중첩: 따로 계산
+  if (extra && extra.stack) { const L = (t.stk || (t.stk = {}))[key] || (t.stk[key] = []); L.push({ left: sec, acc: 0, dps: extra.dps, src: extra.src || null }); t.st[key] = Math.max(t.st[key] || 0, sec); drawUnit(t); return; } // 중첩: 따로 계산
   t.st[key] = Math.max(t.st[key] || 0, sec); if (extra) t.st[key + 'X'] = extra; drawUnit(t);
 }
 function killUnit(u) {
   botMind.unitDown(u);
+  S.lastDeath = { x: u.x, y: u.y }; sfx('death');
+  if (u.side === 'e' && S.phase === 'combat') questAdd('kills', 1);
   u.alive = false; u.vx = 0; u.vy = 0; u.desVx = 0; u.desVy = 0; u._engaged = false;
   clearTelegraph(u);
   if (u.el) { u.el.classList.add('dead'); spawnDeathEffect(u); }
@@ -960,7 +1077,7 @@ function stepUnit(u, dt) {
     u.st[k] = Math.max(0, u.st[k] - dt);
     const L = u.stk && u.stk[k];
     if (L && L.length) { // 중첩된 도트: 하나하나 1초마다
-      for (const d of L) { d.left -= dt; d.acc += dt; if (d.acc >= 1 - 1e-6) { d.acc -= 1; dealDamage(null, u, d.dps, { dot: true }); if (!u.alive) return; } }
+      for (const d of L) { d.left -= dt; d.acc += dt; if (d.acc >= 1 - 1e-6) { d.acc -= 1; dealDamage(d.src && d.src.side !== u.side ? d.src : null, u, d.dps, { dot: true }); if (!u.alive) return; } }
       u.stk[k] = L.filter(d => d.left > 1e-6); u.st[k] = u.stk[k].reduce((m, d) => Math.max(m, d.left), 0);
     } else if (STATUS[k].dot) { u.st[k + 'A'] = (u.st[k + 'A'] || 0) + dt; if (u.st[k + 'A'] >= 1) { u.st[k + 'A'] -= 1; dealDamage(null, u, (u.st[k + 'X'] && u.st[k + 'X'].dps) || 20, { dot: true }); if (!u.alive) return; } }
     if (u.st[k] <= 0) drawUnit(u);
@@ -998,6 +1115,7 @@ function aiSteerAndAttack(u, dt) {
   }
 }
 function performAttack(u, t) {
+  sfxAttack(u);
   fireTelegraph(u); // 예고가 가득 찬 순간 = 공격 발동
   if (u.el) { u.el.style.filter = 'brightness(1.3)'; setTimeout(() => u.el && (u.el.style.filter = ''), 120); }
   if (u.melee) attackLunge(u, t);
@@ -1107,6 +1225,7 @@ function physSyncDom(u, alpha) { // 물리 스텝 사이를 보간해서 그린�
   const xs = x.toFixed(1) + 'px', ys = y.toFixed(1) + 'px';
   if (u.el.style.left !== xs) u.el.style.left = xs;
   if (u.el.style.top !== ys) u.el.style.top = ys;
+  if (rangeRing && rangeRing.unit === u) { rangeRing.el.style.left = xs; rangeRing.el.style.top = ys; if (!u.alive) hideRangeRing(); }
 }
 
 // ── 공격 예고(텔레그래프): 공격 직전 최대 1초 동안 범위를 붉게 띄우고, 왼쪽부터 색이 차올라 가득 차면 공격 (전작 그대로) ──
@@ -1213,7 +1332,7 @@ function stepCombat(dt) {
   for (const u of S.units) if (u.alive) physWalls(u);
   oddsSample();
   const a = S.units.some(u => u.alive && u.side === 'a'), e = S.units.some(u => u.alive && u.side === 'e');
-  if (!a || !e) return endRound(a ? 'a' : e ? 'e' : 'draw', false);
+  if (!a || !e) return beginFinalMoment(a ? 'a' : e ? 'e' : 'draw');
   const stall = S.time - (S.lastDmgAt || 0) >= CFG.STALL;
   if (S.time >= CFG.ROUND_TIME - 1e-9 || stall) { const p = allyOdds(); S.stallEnded = stall && S.time < CFG.ROUND_TIME; return endRound(p > 50 ? 'a' : p < 50 ? 'e' : 'draw', true); } // 판정은 화면에 보이는 정수 승률 · 50:50 은 재경기
 }
@@ -1244,7 +1363,7 @@ function loop(ts) {
   $('hudSpeed').hidden = S.speed === 1; $('hudSpeed').textContent = '×' + S.speed;
   acc += real * S.speed;
   let n = 0; while (acc >= CFG.STEP && S.phase === 'combat' && n++ < 30) { acc -= CFG.STEP; stepCombat(CFG.STEP); }
-  const alpha = clamp(acc / CFG.STEP, 0, 1); S.units.forEach(u => physSyncDom(u, alpha));
+  const alpha = clamp(acc / CFG.STEP, 0, 1); S.units.forEach(u => physSyncDom(u, alpha)); drawMinimap();
   $('hudTimer').textContent = Math.max(0, Math.ceil(CFG.ROUND_TIME - S.time)) + '초';
   if (S.phase === 'combat') { const p = allyOdds(); botMind.oddsTick(p / 100); $('hudOdds').hidden = false; $('hudOdds').innerHTML = `예상 우세 <b>${p}</b> : ${100 - p}`; requestAnimationFrame(loop); }
 }
@@ -1272,13 +1391,88 @@ function unitEl(u) {
   el.style.left = u.x + 'px'; el.style.top = u.y + 'px';
   return el;
 }
-function fitField() {
-  const f = $('field'), W = FW() + 6, H = FH() + 6;
-  f.style.width = FW() + 'px'; f.style.height = FH() + 'px'; f.classList.toggle('ns', !isEW());
-  const s = Math.max(0.25, Math.min(1, $('fieldWrap').clientWidth / W, (window.innerHeight - 290) / H));
-  f.style.transform = `scale(${s})`; $('fieldWrap').style.height = (H * s) + 'px';
+// ── 카메라 (전작 CAM: 확대 0.4~2.4 · 끌어서 이동 · 휠 · 두 손가락 확대 · 미니맵) ──
+const CAM = { x: 0, y: 0, z: 1, moved: false };
+const ZOOM_MAX = 2.4;
+function viewSize() { const w = $('fieldWrap'); return { vw: w.clientWidth || 1, vh: w.clientHeight || 1 }; }
+function fitZoom() { const { vw, vh } = viewSize(); return Math.min(vw / (FW() + 6), vh / (FH() + 6)) * 0.98; }
+function zoomMin() { return Math.min(0.4, fitZoom()); } // 전작 ZOOM_MIN 0.4 · 화면이 작으면 전체가 보이는 배율까지
+function clampCamera() {
+  const { vw, vh } = viewSize(), z = CAM.z, halfW = vw / (2 * z), halfH = vh / (2 * z), pad = 80;
+  CAM.x = Math.max(-pad + halfW, Math.min(FW() + pad - halfW, CAM.x)); CAM.y = Math.max(-pad + halfH, Math.min(FH() + pad - halfH, CAM.y));
+  if (vw / z > FW() + pad * 2) CAM.x = FW() / 2; if (vh / z > FH() + pad * 2) CAM.y = FH() / 2;
 }
-window.addEventListener('resize', () => { if (S.phase !== 'idle') fitField(); });
+function applyCamera() {
+  clampCamera();
+  const { vw, vh } = viewSize();
+  $('field').style.transform = `translate(${vw / 2}px, ${vh / 2}px) scale(${CAM.z}) translate(${-CAM.x}px, ${-CAM.y}px)`;
+  $('zoomLab').textContent = Math.round(CAM.z * 100) + '%';
+  drawMinimap(true);
+}
+function fitCamera() { CAM.z = fitZoom(); CAM.x = FW() / 2; CAM.y = FH() / 2; applyCamera(); }
+function setZoom(z, cx, cy) {
+  const { vw, vh } = viewSize(), r = $('fieldWrap').getBoundingClientRect();
+  const mx = cx == null ? vw / 2 : cx - r.left, my = cy == null ? vh / 2 : cy - r.top;
+  const wx = CAM.x + (mx - vw / 2) / CAM.z, wy = CAM.y + (my - vh / 2) / CAM.z;
+  CAM.z = Math.max(zoomMin(), Math.min(ZOOM_MAX, z));
+  CAM.x = wx - (mx - vw / 2) / CAM.z; CAM.y = wy - (my - vh / 2) / CAM.z;
+  applyCamera();
+}
+function fitField() {
+  const f = $('field'); f.style.width = FW() + 'px'; f.style.height = FH() + 'px'; f.classList.toggle('ns', !isEW());
+  fitCamera();
+}
+window.addEventListener('resize', () => { if (S.phase !== 'idle') applyCamera(); });
+let miniLast = -Infinity;
+function drawMinimap(force) {
+  const c = $('miniMapCanvas'); if (!c) return;
+  const now = performance.now(); if (!force && now - miniLast < 80) return; miniLast = now;
+  const box = $('miniMap'); if (box.style.width !== '154px') { box.style.width = '154px'; box.style.height = '98px'; }
+  const ctx = c.getContext('2d'), W = c.width, H = c.height, sx = W / FW(), sy = H / FH();
+  ctx.clearRect(0, 0, W, H); ctx.fillStyle = '#f8f8f6'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#ecece9'; ctx.fillRect(0, 0, W / 2, H);
+  ctx.strokeStyle = '#888'; ctx.setLineDash([6, 4]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(W / 2, 0); ctx.lineTo(W / 2, H); ctx.stroke(); ctx.setLineDash([]);
+  (S.units && S.units.length ? S.units : []).forEach(u => { if (!u.alive) return; ctx.fillStyle = u.side === 'a' ? '#111' : '#e5322d'; ctx.beginPath(); ctx.arc(u.x * sx, u.y * sy, 4.5, 0, Math.PI * 2); ctx.fill(); });
+  if (!(S.units && S.units.length) && S.place) ['a', 'e'].forEach(side => S.place[side].forEach((p, t) => { if (!p) return; const q = tileXY(side, t); ctx.fillStyle = side === 'a' ? '#111' : '#e5322d'; ctx.beginPath(); ctx.arc(q.x * sx, q.y * sy, 4.5, 0, Math.PI * 2); ctx.fill(); }));
+  const { vw, vh } = viewSize(); ctx.strokeStyle = '#222'; ctx.lineWidth = 2;
+  ctx.strokeRect((CAM.x - vw / (2 * CAM.z)) * sx, (CAM.y - vh / (2 * CAM.z)) * sy, (vw / CAM.z) * sx, (vh / CAM.z) * sy);
+}
+(function bindCamera() {
+  const wrap = $('fieldWrap'), ptrs = new Map(); let pinch = null, start = null;
+  $('btnZoomIn').addEventListener('click', e => { e.stopPropagation(); setZoom(CAM.z * 1.2); });
+  $('btnZoomOut').addEventListener('click', e => { e.stopPropagation(); setZoom(CAM.z / 1.2); });
+  $('btnZoomFit').addEventListener('click', e => { e.stopPropagation(); fitCamera(); });
+  wrap.addEventListener('wheel', e => { e.preventDefault(); setZoom(CAM.z * (e.deltaY > 0 ? 0.9 : 1.12), e.clientX, e.clientY); }, { passive: false });
+  const mm = $('miniMap'); let mmDrag = false;
+  const jump = e => { const r = $('miniMapCanvas').getBoundingClientRect(); CAM.x = (e.clientX - r.left) / r.width * FW(); CAM.y = (e.clientY - r.top) / r.height * FH(); applyCamera(); };
+  mm.addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); mmDrag = true; jump(e); });
+  window.addEventListener('pointermove', e => { if (mmDrag) jump(e); });
+  window.addEventListener('pointerup', () => { mmDrag = false; });
+  wrap.addEventListener('pointerdown', e => {
+    if (e.target.closest('#camZoom, #miniMap') || (e.button != null && e.button !== 0)) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 1) { start = { x: e.clientX, y: e.clientY }; CAM.moved = false; }
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: CAM.z }; CAM.moved = true; }
+  });
+  window.addEventListener('pointermove', e => {
+    const p = ptrs.get(e.pointerId); if (!p) return;
+    const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if (pinch && ptrs.size >= 2) { const [a, b] = [...ptrs.values()]; setZoom(pinch.z * Math.hypot(a.x - b.x, a.y - b.y) / Math.max(1, pinch.d), (a.x + b.x) / 2, (a.y + b.y) / 2); return; }
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 7) { CAM.moved = true; wrap.classList.add('panning'); }
+    if (CAM.moved) { CAM.x -= dx / CAM.z; CAM.y -= dy / CAM.z; applyCamera(); }
+  });
+  const end = e => { ptrs.delete(e.pointerId); if (ptrs.size < 2) pinch = null; if (!ptrs.size) { start = null; wrap.classList.remove('panning'); } };
+  window.addEventListener('pointerup', end); window.addEventListener('pointercancel', end);
+})();
+// ── 사거리 원 (전작 showRangeRing): 지후를 누르면 사거리(공격 판정과 같은 거리)를 점선 원으로 ──
+let rangeRing = null;
+function showRangeRing(u) {
+  hideRangeRing(); if (!u || !u.alive) return;
+  const el = document.createElement('div'); el.className = 'unit-range-ring' + (u.side === 'e' ? ' enemy' : '');
+  const d = attackDist(u) * 2; el.style.width = el.style.height = d + 'px'; el.style.left = u.x + 'px'; el.style.top = u.y + 'px';
+  $('field').appendChild(el); rangeRing = { el, unit: u };
+}
+function hideRangeRing() { if (rangeRing) rangeRing.el.remove(); rangeRing = null; }
 
 // ═════════ 라운드 · 배치 (전작 일반전 규칙) ═════════
 // 라운드마다 배치 기회 2번 (3라운드부터 3번 · 양쪽 라이프 1이면 데스매치 3번). 기회마다 덱에서 카드 3장 → 1장을 골라
@@ -1294,7 +1488,7 @@ function newMatch() {
   rng = mulberry32((Date.now() ^ 0x9e3779b9) >>> 0);
   Object.assign(S, { phase: 'intro', round: 1, lives: { a: CFG.LIVES, e: CFG.LIVES }, place: { a: emptyPlace(), e: emptyPlace() },
     deck: { a: deck.slice(0, 5), e: botDeck() }, units: [], shots: [], time: 0, pool: [], pick: null, moveSel: null, speed: 1, speedManual: false,
-    nick: { a: profile.nick || '나', e: BOT_NAMES[Math.floor(rng() * BOT_NAMES.length)] }, hist: [] });
+    nick: { a: profile.nick || '나', e: BOT_NAMES[Math.floor(rng() * BOT_NAMES.length)] }, hist: [], stats: [] });
   show('battle'); renderIds(); renderLives(); renderField(); renderPool(); showIntro();
   clearTimeout(newMatch.t); newMatch.t = setTimeout(() => { if (S.phase === 'intro') startRound(); }, 3000);
 }
@@ -1331,10 +1525,11 @@ function pickTile(side, preferRow) { // 전작 v42PickTile
   }
   return null;
 }
-function placeAt(side, t, id) { S.place[side][t] = { id, lv: 1 }; }
-function levelUp(side, t) { const p = S.place[side][t]; if (p && p.lv < CFG.MAX_LV) p.lv++; return p; }
+function placeAt(side, t, id) { S.place[side][t] = { id, lv: 1 }; if (side === 'a') sfx('place'); }
+function levelUp(side, t) { const p = S.place[side][t]; if (p && p.lv < CFG.MAX_LV) p.lv++; if (side === 'a') sfx('merge'); return p; }
 // ── 라운드 ──
 function startRound() {
+  fitField(); hideRangeRing();
   setTimeout(() => botMind.roundStart(), 0); // 전작 5.7: 라운드 시작 반응 (판 시작 인사 · 마지막 라이프 · 데스매치)
   S.phase = 'deploy'; S.units = []; S.shots = []; S.odds = []; S.deployN = 0;
   S.roundStart = { a: S.place.a.map(p => p && { ...p }), e: S.place.e.map(p => p && { ...p }) }; // 시간 종료 50:50 이면 이 배치로 다시
@@ -1430,7 +1625,7 @@ function renderPool() {
     || '<span class="note" style="align-self:center">배치 카드가 여기에 나와요</span>';
 }
 function renderField() {
-  const f = $('field'); f.innerHTML = ''; fitField();
+  const f = $('field'); f.innerHTML = ''; rangeRing = null; if (f.style.width !== FW() + 'px') fitField();
   const ts = tileSize(), pick = S.phase === 'deploy' && S.pick != null ? S.pool[S.pick] : null;
   ['a', 'e'].forEach(side => {
     for (let t = 0; t < TILES; t++) {
@@ -1446,6 +1641,7 @@ function renderField() {
       if (side === 'a' && pick && p.id === pick && p.lv < CFG.MAX_LV) el.classList.add('merge');
       if (side === 'a' && S.moveSel === t) el.classList.add('movesel');
       f.appendChild(el); u.el = el; drawUnit(u);
+      if (side === 'a' && S.moveSel === t) showRangeRing(u);
     }
   });
   // 줄 이름 (내 쪽)
@@ -1455,11 +1651,23 @@ function renderField() {
     f.appendChild(lab);
   }
   $('hudCount').textContent = `유닛 ${countSide('a')}/${CFG.MAX_UNITS}`;
+  drawMinimap(true);
 }
 $('pool').addEventListener('click', e => { const c = e.target.closest('.pcard'); if (c) choosePick(Number(c.dataset.i)); });
 $('field').addEventListener('click', e => {
+  if (CAM.moved) { CAM.moved = false; return; } // 끌어서 카메라를 옮긴 것이면 누름이 아니다
+  if (S.phase === 'combat' || S.phase === 'final') { // 전투 중: 지후를 누르면 사거리 원
+    const el = e.target.closest('.unit'), u = el && S.units.find(x => x.el === el);
+    if (u && (!rangeRing || rangeRing.unit !== u)) showRangeRing(u); else hideRangeRing();
+    return;
+  }
   if (S.phase !== 'deploy') return;
-  const el = e.target.closest('[data-tile]'); if (!el || el.dataset.side !== 'a') return;
+  const el = e.target.closest('[data-tile]'); if (!el) return;
+  if (el.dataset.side !== 'a') { // 상대 지후: 사거리만
+    const t = Number(el.dataset.tile), p = S.place.e[t];
+    if (p && el.classList.contains('unit')) { const q = tileXY('e', t), u = makeUnit('e', p.id, p.lv, q.x, q.y); showRangeRing(u); }
+    return;
+  }
   tapTile(Number(el.dataset.tile));
 });
 // ── 전투 ──
@@ -1471,17 +1679,18 @@ function beginCombat() {
   uidSeq = 0; S.units = [];
   ['a', 'e'].forEach(side => S.place[side].forEach((p, t) => { if (!p) return; const { x, y } = tileXY(side, t); const u = makeUnit(side, p.id, p.lv, x, y); u.el = unitEl(u); f.appendChild(u.el); drawUnit(u); S.units.push(u); }));
   if (!S.speedManual) S.speed = speedPref ? CFG.FAST_SPEED : 1; renderSpeedBtn();
-  setPhase('전투 중'); banner('전투 시작!');
+  setPhase('전투 중'); banner('전투 시작!'); sfx('battle_start');
   botMind.combatStart();
   requestAnimationFrame(loop);
 }
 // 배속 버튼 (전작 1× / 1.5×, 켜 두면 다음 전투도 1.5배속)
-let speedPref = false;
+let speedPref = (() => { try { return localStorage.getItem('jhbt2-speed') === '1'; } catch (e) { return false; } })(); // 환경설정 '배속 기억'
 function renderSpeedBtn() { const on = S.phase === 'combat' ? S.speed > 1 : speedPref; $('btnSpeed').textContent = on ? '⏩ 1.5×' : '⏩ 1×'; $('btnSpeed').classList.toggle('on', on); }
-$('btnSpeed').addEventListener('click', () => { if (S.phase === 'combat') { S.speed = S.speed > 1 ? 1 : CFG.FAST_SPEED; S.speedManual = true; speedPref = S.speed > 1; } else speedPref = !speedPref; renderSpeedBtn(); });
+$('btnSpeed').addEventListener('click', () => { if (S.phase === 'combat') { S.speed = S.speed > 1 ? 1 : CFG.FAST_SPEED; S.speedManual = true; speedPref = S.speed > 1; } else speedPref = !speedPref; renderSpeedBtn(); try { localStorage.setItem('jhbt2-speed', speedPref ? '1' : '0'); } catch (e) {} });
 // ── 라운드 끝 (전작 endRoundCombat): 시간 종료 50:50 은 같은 라운드를 처음 배치로 다시 · 양쪽 전멸은 라이프 그대로 다음 라운드 ──
 function endRound(w, timedOut) {
-  botMind.roundEnd(w);
+  botMind.roundEnd(w); recordRoundStats(w, timedOut); hideRangeRing();
+  if (w === 'a') sfx('round_win'); else if (w === 'e') sfx('round_lose');
   S.phase = 'roundEnd';
   S.shots.forEach(s => s.el.remove()); S.shots = []; S.units.forEach(clearTelegraph);
   setPhase('라운드 종료'); $('hudOdds').hidden = true;
@@ -1512,7 +1721,8 @@ function lifeFx(loser) {
 function endMatch(win) {
   S.phase = 'idle'; clearInterval(S.timer); emoClear();
   const xp = win ? 60 : 30, dia = win ? 80 : 30, gold = win ? 1000 + Math.floor(Math.random() * 1001) : 0; // 이기면 골드 1,000~2,000
-  const up = addXp(xp); profile.dia += dia; profile.gold = (profile.gold || 0) + gold; if (win) profile.wins++; else profile.losses++; save();
+  const up = addXp(xp); profile.dia += dia; profile.gold = (profile.gold || 0) + gold; if (up) profile.dia += CFG.LEVEL_REWARD * up;
+  questAdd('games', 1); if (win) questAdd('wins', 1); sfx(win ? 'match_win' : 'match_lose'); if (win) profile.wins++; else profile.losses++; save();
   lbPush(); // 리더보드 전적 갱신 (오프라인이면 조용히 건너뜀)
   $('screen-result').classList.toggle('win', win);
   $('resTitle').textContent = win ? '승리' : '패배';
@@ -1522,6 +1732,7 @@ function endMatch(win) {
     <div class="lvbar"><i style="width:0"></i></div><div class="xprow" style="margin:0"><span>LV.${profile.level}</span><span class="sp"></span><span>${profile.xp} / ${xpNeed(profile.level)} XP</span></div>
     ${up ? `<span class="lvup">LEVEL UP · Lv.${profile.level}</span>` : ''}<div class="r" style="font-size:12px;opacity:.7"><span>남은 라이프</span><b>${Math.max(0, S.lives.a)} : ${Math.max(0, S.lives.e)}</b></div>`;
   show('result');
+  if (up) setTimeout(() => showLevelUp(up), 900);
   setTimeout(() => { const i = $('resBody').querySelector('.lvbar i'); if (i) i.style.width = (profile.xp / xpNeed(profile.level) * 100).toFixed(1) + '%'; }, 80);
 }
 $('btnQuit').addEventListener('click', () => { if (confirm('포기하면 패배로 처리돼요. 나갈까요?')) { clearInterval(S.timer); clearTimeout(newMatch.t); S.phase = 'idle'; endMatch(false); } });
@@ -1538,7 +1749,7 @@ function rollRarity() { let x = rng() * 100; for (const [r, p] of CFG.GACHA) { x
 function rollOne() { let r = rollRarity(), pool = Object.keys(CHARS).filter(id => CHARS[id].rarity === r); while (!pool.length) { r = ({ legend: 'epic', epic: 'rare', rare: 'common' })[r]; pool = Object.keys(CHARS).filter(id => CHARS[id].rarity === r); } return pool[Math.floor(rng() * pool.length)]; }
 function pull(n) {
   const cost = n === 10 ? CFG.PULL10 : CFG.PULL1; if (profile.dia < cost) return;
-  profile.dia -= cost; profile.pulls += n;
+  profile.dia -= cost; profile.pulls += n; questAdd('gacha', n);
   const res = [];
   for (let i = 0; i < n; i++) { const id = rollOne(), isNew = !owned(id); if (isNew) profile.owned[id] = 1; else profile.shards[id] = (profile.shards[id] || 0) + 1; res.push({ id, isNew, seenBefore: !isNew }); }
   // 같은 판에서 처음 나온 지후가 또 나오면 두 번째부터는 중복
@@ -1570,7 +1781,7 @@ function cardsStage(res) {
     if (next >= res.length || busy) return resolve(false);
     const i = next, r = res[i], card = st.querySelector(`.rcard[data-i="${i}"]`);
     busy = true;
-    const flip = () => { card.classList.add('open'); next++; mark(); busy = false; if (next >= res.length) finish(); resolve(true); };
+    const flip = () => { card.classList.add('open'); sfx('gacha_' + CHARS[r.id].rarity); next++; mark(); busy = false; if (next >= res.length) finish(); resolve(true); };
     if (CHARS[r.id].rarity === 'legend') cutscene(r.id, !r.isNew, flip); else flip();
   });
   mark();
@@ -1879,7 +2090,8 @@ function emoOffers() {
 }
 function ensureDaily() {
   const key = todayKey();
-  if (!profile.daily || profile.daily.date !== key) { profile.daily = { date: key, shop: { freeType: Math.random() < 0.5 ? 'gold' : 'dia', freeClaimed: false, rerolls: 0, serial: 0, offers: shopOffers(0), emo: emoOffers() } }; save(); }
+  if (!profile.daily || profile.daily.date !== key) { profile.daily = { date: key, q: { progress: {}, awarded: {}, points: 0, tiers: [] }, shop: { freeType: Math.random() < 0.5 ? 'gold' : 'dia', freeClaimed: false, rerolls: 0, serial: 0, offers: shopOffers(0), emo: emoOffers() } }; save(); }
+  if (!profile.daily.q) profile.daily.q = { progress: {}, awarded: {}, points: 0, tiers: [] };
   return profile.daily.shop;
 }
 const roundNice = (v, unit) => Math.max(unit, Math.round(v / unit) * unit); // 편한 숫자 (~00 · ~000)
@@ -1933,7 +2145,7 @@ async function buyOffer(offerId, withDia) {
   if (o.random) { const pool = byRarity(o.rarity); o.charId = pool[Math.floor(Math.random() * pool.length)]; }
   const id = o.charId, isNew = !owned(id);
   if (isNew) profile.owned[id] = 1; else profile.shards[id] = (profile.shards[id] || 0) + 1;
-  o.sold = true; save();
+  o.sold = true; questAdd('shopBuy', 1); sfx('buy'); save();
   shopMsg(`${CHARS[id].name} ${isNew ? '획득!' : '· 이미 가진 지후라 조각 1개'}`);
   renderShop(); showReveal([{ id, isNew, seenBefore: !isNew }]);
 }
@@ -1943,7 +2155,7 @@ async function buyEmo(key) {
   if (profile.dia < EMO_PRICE) { shopMsg('다이아가 부족합니다.'); return; }
   if (!(await dlg({ icon: '😀', title: '이모티콘을 살까요?', html: `<b>${esc(emoDef(key).name)}</b> · ◆ ${EMO_PRICE}<br><small>지금 다이아 ◆ ${profile.dia.toLocaleString()}</small>`, ok: '구매', cancel: '취소' }))) return;
   if (profile.dia < EMO_PRICE || emoOwned(key)) return;
-  profile.dia -= EMO_PRICE; o.sold = true;
+  profile.dia -= EMO_PRICE; o.sold = true; questAdd('shopBuy', 1); sfx('buy');
   const note = emoGrant(key); save();
   shopMsg(`이모티콘 '${emoDef(key).name}' 구매 완료${note}`); renderShop();
 }
@@ -1965,6 +2177,213 @@ async function exchange(dia, gold) {
 }
 $('btnX1').addEventListener('click', () => exchange(100, 1000));
 $('btnX2').addEventListener('click', () => exchange(1000, 11000));
+
+// ═════════ 일일 퀘스트 (전작 4.4.1) ═════════
+// 퀘스트를 끝내면 포인트 · 구간 보상은 퀘스트 화면에서 직접 받는다 (높은 구간을 받으면 아래에 못 받은 구간도 같이). 매일 자정에 초기화.
+const DAILY_QUESTS = [
+  { key: 'login', label: '접속하기', goal: 1, points: 100 },
+  { key: 'games', label: '게임 3회 플레이하기', goal: 3, points: 150 },
+  { key: 'kills', label: '적 100마리 처치하기', goal: 100, points: 100 },
+  { key: 'wins', label: '게임 1회 승리하기', goal: 1, points: 150 },
+  { key: 'gacha', label: '지후 뽑기 1회', goal: 1, points: 100 },
+  { key: 'shopBuy', label: '상점에서 구매하기 1회', goal: 1, points: 100 },
+];
+const DAILY_GOAL = DAILY_QUESTS.reduce((s, q) => s + q.points, 0); // 700
+const DAILY_TIERS = [ // 전작 구간 보상 (티켓 · 주사위는 지후배틀 2에 없어서 다이아 · 골드로)
+  { p: 150, gold: 2000, label: '● 2,000' },
+  { p: 300, gold: 3000, dia: 100, label: '● 3,000 · ◆ 100' },
+  { p: 450, dia: 100, label: '◆ 100' },
+  { p: 600, dia: 200, label: '◆ 200' },
+  { p: 700, gold: 5000, label: '● 5,000' },
+];
+function dq() { ensureDaily(); return profile.daily.q; }
+function questAdd(key, n = 1) {
+  const q = DAILY_QUESTS.find(x => x.key === key); if (!q) return;
+  const d = dq(); d.progress[key] = (d.progress[key] || 0) + n;
+  if (!d.awarded[key] && d.progress[key] >= q.goal) { d.awarded[key] = true; d.points += q.points; banner(`퀘스트 완료 · ${q.label}`); }
+  save(); renderQuestDot();
+}
+function tiersReady() { const d = dq(); return DAILY_TIERS.filter(t => d.points >= t.p && !d.tiers.includes(t.p)); }
+function claimTier(p) {
+  const d = dq(), list = DAILY_TIERS.filter(t => t.p <= p && d.points >= t.p && !d.tiers.includes(t.p)); if (!list.length) return;
+  list.forEach(t => { if (t.gold) profile.gold = (profile.gold || 0) + t.gold; if (t.dia) profile.dia += t.dia; d.tiers.push(t.p); });
+  save(); sfx('buy'); $('qMsg').textContent = `받았어요: ${list.map(t => t.label).join(' · ')}`; renderQuest(); renderLobby();
+}
+function renderQuestDot() { if (!$('questDot')) return; const d = dq(); $('questDot').hidden = !tiersReady().length; $('questSmall').textContent = `${d.points} / ${DAILY_GOAL}P`; }
+function renderQuest() {
+  const d = dq(), now = new Date(), mid = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1), left = Math.max(0, Math.round((mid - now) / 60000));
+  $('questReset').textContent = `초기화까지 ${Math.floor(left / 60)}시간 ${left % 60}분`;
+  $('qPoints').textContent = d.points; $('qGoal').textContent = DAILY_GOAL;
+  $('qBar').innerHTML = `<i style="width:${Math.min(100, d.points / DAILY_GOAL * 100)}%"></i>` + DAILY_TIERS.map(t => `<span class="tk${d.points >= t.p ? ' on' : ''}" style="left:${t.p / DAILY_GOAL * 100}%"></span>`).join('');
+  $('qTiers').innerHTML = DAILY_TIERS.map(t => { const done = d.tiers.includes(t.p), ready = !done && d.points >= t.p;
+    return `<button class="qtier${done ? ' done' : ready ? ' ready' : ''}" data-tier="${t.p}" ${ready ? '' : 'disabled'}><b>${t.p}P</b><span>${t.label}</span><span>${done ? '받음' : ready ? '받기' : '잠김'}</span></button>`; }).join('');
+  $('qList').innerHTML = DAILY_QUESTS.map(q => { const v = Math.min(q.goal, d.progress[q.key] || 0), done = !!d.awarded[q.key];
+    return `<div class="qrow${done ? ' done' : ''}"><b>${q.label}</b><span class="pt">${done ? '완료 · ' : ''}+${q.points}P</span><span class="pb"><i style="width:${v / q.goal * 100}%"></i></span><span class="note" style="grid-column:1/-1;margin-top:-4px">${v} / ${q.goal}</span></div>`; }).join('');
+  renderQuestDot();
+}
+$('qTiers').addEventListener('click', e => { const b = e.target.closest('[data-tier]'); if (b) claimTier(Number(b.dataset.tier)); });
+
+// ═════════ 경기 통계 (전작): 라운드별 · 합계 — 가한 피해 · 받은 피해 · 처치 · 기여도 · MVP ═════════
+function recordRoundStats(w, timedOut) {
+  if (!S.stats) S.stats = [];
+  const rows = S.units.map(u => ({ id: u.id, side: u.side, lv: u.lv, dealt: u.dmgDealt || 0, taken: u.dmgTaken || 0, kills: u._kills || 0, alive: !!u.alive }));
+  S.stats.push({ round: S.round, winner: w, timedOut, seconds: Math.round(S.time || 0), rows });
+}
+let msMetric = 'dealt';
+function renderMatchStats(tab = 'all', metric = msMetric) {
+  msMetric = metric;
+  const rounds = S.stats || [];
+  if (!rounds.length) { $('msTabs').innerHTML = ''; $('msBody').innerHTML = '<p class="note">기록된 라운드가 없습니다.</p>'; return; }
+  const metrics = [['dealt', '가한 피해'], ['taken', '받은 피해'], ['kills', '처치']];
+  const tabs = [['all', '합계'], ...rounds.map((r, i) => [String(i), `R${r.round} ${r.winner === 'draw' ? '무' : r.winner === 'a' ? '승' : '패'}`])];
+  $('msTabs').innerHTML = `<div class="ms-seg">${metrics.map(([k, l]) => `<button class="${k === metric ? 'on' : ''}" data-metric="${k}">${l}</button>`).join('')}</div><div class="ms-seg">${tabs.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" data-tab="${k}">${l}</button>`).join('')}</div>`;
+  $('msTabs').querySelectorAll('[data-metric]').forEach(b => b.onclick = () => renderMatchStats(tab, b.dataset.metric));
+  $('msTabs').querySelectorAll('[data-tab]').forEach(b => b.onclick = () => renderMatchStats(b.dataset.tab, metric));
+  let rows;
+  if (tab === 'all') {
+    const m = new Map();
+    rounds.forEach(r => r.rows.forEach(x => { const k = x.side + ':' + x.id, v = m.get(k) || { id: x.id, side: x.side, lv: x.lv, dealt: 0, taken: 0, kills: 0 }; v.dealt += x.dealt; v.taken += x.taken; v.kills += x.kills; v.lv = Math.max(v.lv, x.lv); m.set(k, v); }));
+    rows = [...m.values()];
+  } else rows = rounds[Number(tab)].rows.map(x => ({ ...x }));
+  ['a', 'e'].forEach(side => { const tot = rows.filter(r => r.side === side).reduce((n, r) => n + r.dealt, 0); rows.filter(r => r.side === side).forEach(r => { r.share = tot ? r.dealt / tot : 0; }); });
+  const color = { a: '#111', e: '#e5322d' };
+  const col = side => { const list = rows.filter(r => r.side === side).sort((x, y) => y[metric] - x[metric]), max = Math.max(1, ...list.map(r => r[metric]));
+    return `<div class="ms-col"><span class="h"><i style="background:${color[side]}"></i>${side === 'a' ? '아군' : '적'}</span>${list.length ? list.map((r, i) => `<div class="ms-row"><span class="pic">${pic(r.id)}</span><span><span class="t"><span>${CHARS[r.id].name}${r.lv > 1 ? ` Lv.${r.lv}` : ''}</span><span>${Math.round(r[metric]).toLocaleString()}</span></span><span class="bar"><b style="width:${Math.round(r[metric] / max * 100)}%;background:${color[side]};animation-delay:${(0.05 + i * 0.06).toFixed(2)}s"></b></span><span class="sub">기여도 ${Math.round(r.share * 100)}% · 처치 ${r.kills}${r.alive === false && tab !== 'all' ? ' · 사망' : ''}</span></span></div>`).join('') : '<p class="note">기록 없음</p>'}</div>`; };
+  const mvp = side => { const m = rows.filter(r => r.side === side).sort((x, y) => y.share - x.share)[0]; if (!m || !m.dealt) return '';
+    return `<div class="ms-mvp ${side}"><span class="k">${side === 'a' ? 'MVP' : '상대 MVP'}</span><span class="pic">${pic(m.id)}</span><b>${CHARS[m.id].name}</b><span class="v">${Math.round(m.dealt).toLocaleString()} 피해 · ${m.kills}처치</span></div>`; };
+  $('msBody').innerHTML = `<div class="ms-cols">${col('a')}${col('e')}</div>${mvp('a')}${mvp('e')}`;
+}
+const openStats = () => { renderMatchStats(); $('statsModal').classList.add('show'); };
+$('btnStatsHud').addEventListener('click', openStats);
+$('btnResStats').addEventListener('click', openStats);
+$('btnStatsClose').addEventListener('click', () => $('statsModal').classList.remove('show'));
+$('statsModal').addEventListener('click', e => { if (e.target.id === 'statsModal') $('statsModal').classList.remove('show'); });
+
+// ═════════ 마지막 순간 (전작 beginFinalMoment): 마지막으로 쓰러진 자리로 확대 · 살아남은 지후가 미끄러지며 멈춘다 · 2초 뒤 결과 ═════════
+function beginFinalMoment(w) {
+  if (S.phase !== 'combat') return;
+  S.phase = 'final';
+  S.shots.forEach(p => p.el.remove()); S.shots = []; S.units.forEach(clearTelegraph);
+  const f = $('field'), focus = S.lastDeath;
+  if (focus) { f.classList.add('cinematic'); f.getBoundingClientRect(); CAM.x = focus.x; CAM.y = focus.y; CAM.z = Math.min(ZOOM_MAX, Math.max(CAM.z * 1.6, 1.05)); applyCamera(); }
+  S.units.forEach(u => { if (!u.alive || !u.el) return; u.el.style.setProperty('--final-dx', clamp((u.vx || 0) * 0.16, -40, 40) + 'px'); u.el.style.setProperty('--final-dy', clamp((u.vy || 0) * 0.16, -40, 40) + 'px'); u.el.classList.add('final-drift'); });
+  $('fieldWrap').classList.add('final-moment'); $('finalMoment').classList.add('show'); $('hudTimer').textContent = 'FINAL';
+  $('deployTip').innerHTML = '✦ <b>마지막 순간</b> — 전투 결과를 확인하고 있습니다';
+  setTimeout(() => { f.classList.remove('cinematic'); $('fieldWrap').classList.remove('final-moment'); $('finalMoment').classList.remove('show'); if (S.phase === 'final') endRound(w, false); }, 2000);
+}
+
+// ═════════ 레벨업 창 (전작 level-up) ═════════
+function showLevelUp(up) {
+  $('lvNum').textContent = profile.level; $('lvMsg').textContent = `Lv.${profile.level - up} → Lv.${profile.level}`;
+  $('lvReward').textContent = `◆ ${(CFG.LEVEL_REWARD * up).toLocaleString()} 받음`;
+  $('levelUp').classList.add('show'); sfx('levelup');
+}
+$('btnLvOk').addEventListener('click', () => $('levelUp').classList.remove('show'));
+
+// ═════════ 효과음 (전작 5.7.6) ═════════
+// sfx/<이름>.mp3 파일이 있으면 그걸 쓰고 (지금은 attack), 없으면 바로 만든 짧은 소리. 환경설정의 음량 (이 기기에 저장).
+const SFX = {
+  place: { gap: 0.08, vol: 0.7, notes: [[620, 0.05, 'square'], [880, 0.06, 'square']] },
+  merge: { gap: 0.1, vol: 0.8, notes: [[523, 0.06], [659, 0.06], [880, 0.1]] },
+  battle_start: { gap: 1, vol: 0.9, notes: [[220, 0.12, 'sawtooth'], [330, 0.12, 'sawtooth'], [440, 0.2, 'sawtooth']] },
+  attack: { gap: 0.06, vol: 0.35, file: true, notes: [[180, 0.04, 'square']] },
+  death: { gap: 0.12, vol: 0.5, notes: [[300, 0.06, 'triangle'], [160, 0.14, 'triangle']] },
+  round_win: { gap: 1, vol: 0.9, notes: [[659, 0.1], [880, 0.18]] },
+  round_lose: { gap: 1, vol: 0.9, notes: [[440, 0.12], [330, 0.2]] },
+  match_win: { gap: 1, vol: 1, notes: [[523, 0.1], [659, 0.1], [784, 0.1], [1046, 0.3]] },
+  match_lose: { gap: 1, vol: 1, notes: [[392, 0.16], [330, 0.16], [262, 0.34]] },
+  buy: { gap: 0.2, vol: 0.8, notes: [[988, 0.06, 'square'], [1319, 0.14, 'square']] },
+  levelup: { gap: 1, vol: 0.9, notes: [[523, 0.07], [659, 0.07], [784, 0.07], [1046, 0.07], [1319, 0.25]] },
+  gacha_common: { gap: 0.15, vol: 0.7, notes: [[660, 0.1]] },
+  gacha_rare: { gap: 0.15, vol: 0.8, notes: [[660, 0.07], [990, 0.12]] },
+  gacha_epic: { gap: 0.15, vol: 0.9, notes: [[660, 0.07], [880, 0.07], [1320, 0.16]] },
+  gacha_legend: { gap: 0.15, vol: 1, notes: [[523, 0.08], [784, 0.08], [1046, 0.08], [1568, 0.3]] },
+};
+const SFX_VOL_KEY = 'jhbt2-sfx-vol';
+const sfxState = { ctx: null, buf: {}, last: {}, missing: {}, vol: (() => { try { const v = localStorage.getItem(SFX_VOL_KEY); return v == null ? 70 : clamp(Number(v) || 0, 0, 100); } catch (e) { return 70; } })() };
+function sfxCtx() { if (!sfxState.ctx) { try { sfxState.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } } if (sfxState.ctx.state === 'suspended') sfxState.ctx.resume().catch(() => {}); return sfxState.ctx; }
+function sfxFile(name) {
+  if (sfxState.buf[name] || sfxState.missing[name] || sfxState.buf[name] === 0 || location.protocol === 'file:') return;
+  const ctx = sfxCtx(); if (!ctx) return; sfxState.buf[name] = 0;
+  fetch(`sfx/${name}.mp3`).then(r => { if (!r.ok) throw 0; return r.arrayBuffer(); }).then(d => new Promise((ok, bad) => ctx.decodeAudioData(d, ok, bad))).then(b => { sfxState.buf[name] = b; }).catch(() => { sfxState.missing[name] = true; delete sfxState.buf[name]; });
+}
+function sfx(name, volMul = 1) {
+  const def = SFX[name]; if (!def || sfxState.vol <= 0) return false;
+  const now = performance.now() / 1000; if (now - (sfxState.last[name] || 0) < def.gap) return false; sfxState.last[name] = now;
+  const ctx = sfxCtx(); if (!ctx) return false;
+  const v = def.vol * volMul * (sfxState.vol / 100) * 0.35;
+  if (def.file) { const b = sfxState.buf[name]; if (b) { const src = ctx.createBufferSource(), g = ctx.createGain(); g.gain.value = def.vol * volMul * (sfxState.vol / 100); src.buffer = b; src.connect(g).connect(ctx.destination); src.start(); return true; } sfxFile(name); }
+  let t = ctx.currentTime;
+  def.notes.forEach(([f, d, type]) => { const o = ctx.createOscillator(), g = ctx.createGain(); o.type = type || 'triangle'; o.frequency.setValueAtTime(f, t); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, v), t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + d); o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + d + 0.02); t += d * 0.85; });
+  return true;
+}
+const sfxBurst = [];
+function sfxAttack(u) { // 한꺼번에 너무 많이 울리지 않게 (0.15초 안에 6개까지)
+  if (!inBattle()) return; const now = performance.now();
+  while (sfxBurst.length && now - sfxBurst[0] > 150) sfxBurst.shift();
+  if (sfxBurst.length >= 6) return;
+  if (sfx('attack', u.side === 'a' ? 1 : 0.7)) sfxBurst.push(now);
+}
+function sfxSetVolume(v) { sfxState.vol = clamp(Math.round(Number(v) || 0), 0, 100); try { localStorage.setItem(SFX_VOL_KEY, String(sfxState.vol)); } catch (e) {} }
+
+// ═════════ 햄버거 메뉴 (전작 메뉴 서랍): 코드 입력 · 패치노트 · 도움말 · 환경설정 ═════════
+const openModal = id => $(id).classList.add('show'), closeModal = id => $(id).classList.remove('show');
+document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => closeModal(b.dataset.close)));
+['menuModal', 'codeModal', 'patchModal', 'helpModal', 'setModal', 'levelUp'].forEach(id => $(id).addEventListener('click', e => { if (e.target.id === id) closeModal(id); }));
+$('btnMenu').addEventListener('click', () => { $('menuVer').textContent = gameVersion(); openModal('menuModal'); });
+const fromMenu = id => () => { closeModal('menuModal'); openModal(id); };
+$('btnMenuCode').addEventListener('click', () => { $('codeInput').value = ''; $('codeMsg').textContent = '코드는 영어 대문자와 숫자로만 되어 있어요. 코드마다 한 번 쓸 수 있습니다.'; fromMenu('codeModal')(); setTimeout(() => $('codeInput').focus(), 50); });
+$('btnMenuPatch').addEventListener('click', () => { renderPatch(); fromMenu('patchModal')(); });
+$('btnMenuHelp').addEventListener('click', () => { renderHelp('rule'); fromMenu('helpModal')(); });
+$('btnMenuSettings').addEventListener('click', () => { renderSettings(); fromMenu('setModal')(); });
+// 쿠폰 코드: 계정(이 기기)마다 한 번
+const CODES = {
+  JHBT2BETA: { dia: 1000, gold: 5000, label: '◆ 1,000 · ● 5,000' }, // BETA 오픈 기념
+};
+function redeemCode(raw) {
+  const code = String(raw || '').trim().toUpperCase().replace(/\s+/g, '');
+  if (!code) return '코드를 입력하세요.';
+  const c = CODES[code]; if (!c) return '없는 코드예요. 다시 확인해 주세요.';
+  profile.codes = profile.codes || []; if (profile.codes.includes(code)) return '이미 사용한 코드예요.';
+  profile.codes.push(code); if (c.dia) profile.dia += c.dia; if (c.gold) profile.gold = (profile.gold || 0) + c.gold;
+  save(); sfx('buy'); renderLobby(); return `코드 사용 완료! ${c.label}`;
+}
+$('btnCodeOk').addEventListener('click', () => { $('codeMsg').textContent = redeemCode($('codeInput').value); });
+$('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnCodeOk').click(); });
+// 패치노트
+const PATCH_NOTES = [
+  { v: '0.9.0', date: '2026.10.21', items: ['일일 퀘스트 · 구간 보상 (전작)', '경기 통계 · MVP (전작)', '전장 카메라: 확대 · 이동 · 미니맵 (전작)', '지후를 누르면 사거리 원 (전작)', '효과음 · 환경설정 음량', '햄버거 메뉴: 코드 입력 · 패치노트 · 도움말 · 환경설정', '마지막 순간 연출 · 레벨업 창 (레벨마다 ◆100)'] },
+  { v: '0.8.0', date: '2026.10.21', items: ['상점 (전작 일일 상점 · 가격 약 2배)', '이모티콘 55종 · 봇의 속마음', '골드 · 승리하면 ● 1,000~2,000', '공격력 약 +30%'] },
+  { v: '0.7.0', date: '2026.10.21', items: ['인게임 규칙을 전작 일반전과 같게 (라이프 4 · 배치 칸 3x5 만 다름)', '카드 3장 중 1장 배치 · 겹쳐 레벨업 · 최대 10기 · Lv7', '항상 가로 전장', '능력치를 화염 지후 체력 1000 기준으로'] },
+  { v: '0.6.0', date: '2026.10.21', items: ['리더보드 (BETA 전적)', '업데이트 알림 · 앱 아이콘'] },
+  { v: '0.5.0', date: '2026.10.21', items: ['새 디자인', '로비 버튼 겹침 수정'] },
+  { v: '0.4.0', date: '2026.10.21', items: ['화상 중첩 · 밸런스 조정', '체력바 안에 체력 수치'] },
+  { v: '0.3.0', date: '2026.10.21', items: ['전투 엔진을 전작과 같게 (물리 · 이동 · 빨간 부채꼴 · 이펙트)', '지후 서사 · 덱 상세정보'] },
+  { v: '0.2.0', date: '2026.10.21', items: ['기본 지후 5종: 화염 · 얼음 · 검 · 암살 · 쉴드'] },
+  { v: '0.1.0', date: '2026.10.21', items: ['지후배틀 2 BETA 시작: 뽑기 · 덱 · 봇전'] },
+];
+function renderPatch() { $('patchBody').innerHTML = PATCH_NOTES.map(n => `<div class="pn"><div class="vh"><b>v${n.v}</b><small>${n.date}</small></div><ul>${n.items.map(i => `<li>${i}</li>`).join('')}</ul></div>`).join(''); }
+// 도움말
+function renderHelp(tab) {
+  const tabs = [['rule', '게임 방법'], ['status', '상태이상'], ['grow', '성장 · 보상']];
+  $('helpTabs').innerHTML = tabs.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" data-h="${k}">${l}</button>`).join('');
+  $('helpTabs').querySelectorAll('[data-h]').forEach(b => b.onclick = () => renderHelp(b.dataset.h));
+  $('helpBody').innerHTML = tab === 'rule' ? `<p>덱의 지후 5기로 봇과 싸워요. 라이프 <b>${CFG.LIVES}</b>를 먼저 잃는 쪽이 져요.</p>
+    <h4>배치</h4><ul><li>라운드마다 배치 기회 <b>2번</b> (3라운드부터 <b>3번</b> · 양쪽 라이프가 1이면 데스매치 <b>3번</b>)</li><li>기회마다 덱에서 카드 <b>3장</b> → 1장을 골라 <b>빈 칸</b>에 놓거나, <b>같은 지후</b> 위에 겹쳐 <b>레벨업</b> (${CFG.PICK_TIME}초가 지나면 자동)</li><li>내가 하나 놓으면 상대도 하나 · 전장 최대 <b>${CFG.MAX_UNITS}기</b> · 같은 지후는 <b>${CFG.SAME_LIMIT}기</b>까지</li><li>놓은 지후는 다음 라운드에도 제자리에서 체력이 가득 찬 채로 다시 나와요 · 내 지후를 눌러 자리를 옮길 수 있어요</li><li>칸은 앞에서부터 전열 · 중열 · 후열 — 전열이 먼저 맞아요</li></ul>
+    <h4>전투</h4><ul><li>지후는 가장 가까운 적에게 다가가 싸워요 · 근접 지후는 공격 직전 <b>빨간 부채꼴</b>로 범위를 보여 줘요</li><li>제한 시간 <b>${CFG.ROUND_TIME}초</b> · <b>${CFG.STALL}초</b> 동안 아무도 피해를 못 주면 바로 판정 · 시간이 끝나면 <b>예상 우세</b>로 판정 (50:50이면 같은 라운드를 다시)</li><li>${CFG.FAST_AFTER}초가 지나면 1.5배속 · ⏩ 버튼으로 직접 바꿀 수도 있어요</li><li>전장은 끌어서 옮기고, 휠 · 두 손가락 · ＋/− 버튼으로 확대해요 · 지후를 누르면 사거리 원</li></ul>`
+    : tab === 'status' ? `<div class="stl">${Object.entries(STATUS).map(([k, v]) => `<span>${v.icon}</span><b>${v.name}</b><span>${({ stun: '움직이지도 공격하지도 못한다', freeze: '움직이지도 공격하지도 못한다 · 풀린 뒤 0.5초 동안 다시 안 걸린다', burn: '1초마다 피해 · 여러 번 걸리면 따로 쌓인다', poison: '1초마다 피해', blind: '일반 공격이 50% 빗나간다', silence: '스킬 게이지가 멈춘다', weak: '받는 피해 +20% · 공격력 -15%', stealth: '적이 노리지 못한다 (범위 공격에는 맞는다)' })[k] || ''}</span>`).join('')}</div>`
+    : `<ul><li>뽑기: 일반 65% · 희귀 30% · 영웅 4% · 전설 1% · 이미 가진 지후는 그 지후의 조각 1개</li><li>경기: 승리 +60 XP · ◆80 · ● 1,000~2,000 / 패배 +30 XP · ◆30</li><li>계정 레벨업마다 ◆${CFG.LEVEL_REWARD}</li><li>일일 퀘스트 포인트 구간마다 골드 · 다이아</li><li>상점: 매일 지후 매물 5개 · 이모티콘 3개 · 다이아 환전</li><li>지후 레벨 (경기 안): 겹칠 때마다 체력 · 공격력 ×${CFG.LEVEL_MULT} · 효과 ×${CFG.EFFECT_MULT} (최대 Lv${CFG.MAX_LV})</li></ul>`;
+}
+// 환경설정: 효과음 음량 · 배속 기억 · 닉네임
+function renderSettings() {
+  $('setBody').innerHTML = `<div class="setrow"><span>효과음</span><span class="sp"></span><input type="range" min="0" max="100" value="${sfxState.vol}" id="setSfx"><b id="setSfxV" style="width:34px;text-align:right">${sfxState.vol}</b></div>
+    <div class="setrow"><span>배속 기억 (다음 전투도 1.5배속)</span><span class="sp"></span><button class="btn" id="setSpeed">${speedPref ? '켜짐' : '꺼짐'}</button></div>
+    <div class="setrow"><span>닉네임</span><span class="sp"></span><input class="nick" id="setNick" maxlength="12" value="${esc(profile.nick || '')}"><button class="btn" id="setNickOk">변경</button></div>`;
+  $('setSfx').oninput = e => { sfxSetVolume(e.target.value); $('setSfxV').textContent = sfxState.vol; };
+  $('setSfx').onchange = () => sfx('buy');
+  $('setSpeed').onclick = () => { speedPref = !speedPref; try { localStorage.setItem('jhbt2-speed', speedPref ? '1' : '0'); } catch (e) {} renderSettings(); };
+  $('setNickOk').onclick = () => { const n = $('setNick').value.trim().slice(0, 12); if (!n) return banner('닉네임을 넣어 주세요'); profile.nick = n; save(); renderLobby(); banner('닉네임을 바꿨어요'); };
+}
 
 // ═════════ 리더보드 화면 ═════════
 const LB_TOP = 50;
@@ -2078,9 +2497,11 @@ $('btnDeck').addEventListener('click', () => { renderDeck(); show('deck'); });
 $('btnGacha').addEventListener('click', () => { renderGacha(); show('gacha'); });
 $('btnLb').addEventListener('click', () => { show('lb'); lbLoad(); });
 $('btnShop').addEventListener('click', () => { shopMsg(''); renderShop(); show('shop'); });
+$('btnQuest').addEventListener('click', () => { $('qMsg').textContent = ''; renderQuest(); show('quest'); });
 $('lbRetry').addEventListener('click', lbLoad);
 $('btnResOk').addEventListener('click', () => { renderLobby(); show('lobby'); });
 $('btnStart').addEventListener('click', () => { const n = $('nickInput').value.trim(); if (!n) return banner('닉네임을 넣어 주세요'); profile.nick = n.slice(0, 12); save(); renderLobby(); show('lobby'); });
+questAdd('login', 1); // 오늘 접속
 if (profile.nick) { renderLobby(); show('lobby'); } else show('welcome');
 startUpdateChecks(); // PWA 등록 + 5분마다 새 버전 확인
 window.__jb2 = { S, CHARS, CFG, A, profile: () => profile, newMatch, startRound, choosePick, tapTile, autoPlace, beginCombat, pull, rollRarity, makeUnit, stepCombat, tileXY, allyOdds, lbLoad, lbPush, fbInit }; // BETA 테스트용

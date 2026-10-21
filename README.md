@@ -10,11 +10,14 @@ index.html 하나가 게임 전체 (빌드 없음). 로컬 테스트: `python -m
 ### 리더보드 (파이어베이스)
 - 저장소: 전작과 같은 Firebase 프로젝트(`jihoobattle`)의 **`jhbt2lb` 컬렉션** 재사용
 - 접근: **익명 인증**으로 자기 문서(`jhbt2lb/<uid>`)만 쓰고 최대 50명을 승수 기준으로 읽음
-- 규칙: 이 저장소의 `firestore.rules` (Firebase 콘솔 → Firestore → 규칙에 붙여넣어 게시)
+- 규칙: 이 저장소의 `firestore.rules` = **지후배틀 1 규칙 전체 + 지후배틀 2 블록** (같은 프로젝트라 규칙은 하나뿐)
+  - 리더보드 문서: `nickname · level · wins · losses · deck(덱 5기) · fav(대표 지후) · xp · updatedAt`
 
 **운영 체크리스트 (콘솔에서 2가지):**
 1. Authentication → Sign-in method → **Anonymous** 사용 설정
-2. Firestore Database → **규칙** 탭에 `firestore.rules` 내용 게시 (전작 규칙을 그대로 쓰고 있다면 `match /jhbt2lb/...` 블록만 추가)
+2. Firestore Database → **규칙** 탭에 `firestore.rules` **파일 전체**를 붙여넣어 게시
+   - ⚠ 예전처럼 `jhbt2lb` 블록만 게시하면 지후배틀 1 규칙이 전부 사라진다. 꼭 파일 전체를
+   - 지후배틀 1 규칙을 바꿀 때는 `JHBT/firestore.rules` 와 이 파일을 같이 맞출 것
 
 문제가 생기면 로비 → 리더보드 화면에 에러 코드가 그대로 표시됨 (예: `auth/operation-not-allowed` = 익명 인증 미설정).
 

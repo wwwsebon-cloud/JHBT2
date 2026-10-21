@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="0.10.0"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="0.11.0"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -316,19 +316,48 @@ a { color:inherit; }
 #dlg h3 { margin:0; font:900 22px var(--display); letter-spacing:-.04em; }
 #dlg .bd { font-size:13px; line-height:1.7; color:#444; }
 #dlg .bt { display:flex; gap:8px; width:100%; margin-top:6px; } #dlg .bt .btn { flex:1; }
-/* 리더보드 (0.6.0) */
-.lbme { border:1px solid #333; border-radius:14px; padding:14px 18px; display:flex; align-items:center; gap:12px; margin-bottom:14px; background:rgba(255,255,255,.03); }
-.lbme .rk { font:900 22px var(--mono); color:var(--paper); min-width:52px; }
-.lbme .rk small { display:block; font:800 8px var(--mono); letter-spacing:.2em; color:#8f8f8c; }
-.lbme b { font-size:16px; } .lbme small { font:800 10px var(--mono); color:#8f8f8c; }
-.lbhead { display:grid; grid-template-columns:44px 1fr 56px 56px 44px; gap:8px; padding:8px 14px; border-bottom:1px solid #333; font:800 9px var(--mono); letter-spacing:.18em; color:#8f8f8c; }
-.lbrow { display:grid; grid-template-columns:44px 1fr 56px 56px 44px; gap:8px; align-items:center; padding:9px 14px; border-bottom:1px solid #262625; font:700 13px var(--mono); }
-.lbrow .rk { color:#8f8f8c; font-weight:800; }
-.lbrow.top1 .rk { color:#f7ce46; } .lbrow.top2 .rk { color:#c0c0c4; } .lbrow.top3 .rk { color:#d08b4c; }
-.lbrow .nm { font-weight:900; font-family:'Pretendard Variable', sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.lbrow .st { color:#8f8f8c; text-align:right; } .lbrow .st.w { color:var(--paper); }
-.lbrow.me { background:rgba(247,206,70,.10); border-left:2px solid #f7ce46; padding-left:12px; }
-.lbrow.load { font:800 11px var(--mono); color:#8f8f8c; justify-content:center; }
+/* 리더보드 (전작처럼: 검은 띠 · 1~3위 단상 · 카드마다 덱) */
+#screen-lb { background:var(--bg); color:var(--ink); }
+.lbtop { background:var(--dark); color:var(--paper); padding:0 24px; position:relative; overflow:hidden;
+  background-image:radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,.5), transparent), radial-gradient(1px 1px at 72% 12%, rgba(255,255,255,.4), transparent), radial-gradient(1.5px 1.5px at 88% 46%, rgba(255,255,255,.35), transparent), radial-gradient(1px 1px at 34% 64%, rgba(255,255,255,.3), transparent), radial-gradient(1px 1px at 58% 80%, rgba(255,255,255,.35), transparent); }
+.lbtop .in { max-width:1000px; margin:0 auto; }
+.lbtop .top { flex-wrap:wrap; }
+.lbtabs { display:flex; border:2px solid var(--paper); border-radius:4px; overflow:hidden; }
+.lbtabs button { border:0; background:transparent; color:var(--paper); font:900 14px 'Pretendard Variable', sans-serif; padding:10px 26px; }
+.lbtabs button.on { background:#f7ce46; color:#111; }
+.lbsub { font-size:13px; color:#bdbdba; margin:-4px 0 8px; } .lbsub b { color:var(--paper); }
+.podium { display:grid; grid-template-columns:repeat(3, minmax(0, 210px)); justify-content:center; align-items:end; gap:18px; padding-top:20px; min-height:330px; }
+.pod { display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; }
+.pod .av { position:relative; width:92px; height:92px; border-radius:20px; padding:5px; background:linear-gradient(135deg, #f7ce46, #b8860b 45%, #f7ce46); box-shadow:0 0 24px rgba(247,206,70,.45); animation:rise .5s backwards; }
+.pod.r2 .av, .pod.r3 .av { width:80px; height:80px; }
+.pod .av span { display:block; width:100%; height:100%; border-radius:15px; overflow:hidden; background:#f2f2f0; border:3px solid #111; }
+.pod .av img { width:100%; height:100%; object-fit:cover; }
+.pod .av em { position:absolute; left:50%; bottom:-9px; transform:translateX(-50%); font:900 10px var(--mono); font-style:normal; background:#111; color:#f7ce46; border:1.5px solid #f7ce46; border-radius:999px; padding:1px 8px; white-space:nowrap; }
+.pod b { margin-top:8px; font-size:17px; font-weight:900; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pod small { font:800 11px var(--mono); color:#bdbdba; }
+.pod .blk { width:100%; margin-top:8px; border-radius:16px 16px 0 0; background:var(--paper); color:#111; display:flex; justify-content:center; padding-top:14px; font:900 46px var(--display); }
+.pod.r1 .blk { height:180px; } .pod.r2 .blk { height:132px; } .pod.r3 .blk { height:96px; }
+.pod.empty .av { background:#2a2a29; box-shadow:none; } .pod.empty b { color:#555; }
+.lbbody { max-width:1000px; margin:0 auto; padding:18px 24px 50px; }
+.lbnote { font-size:12px; color:#666; margin-bottom:14px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.lbnote .pill { border-color:#111; }
+.lbcard { display:grid; grid-template-columns:80px minmax(0,1fr) auto; gap:4px 18px; align-items:center; border:3px solid #111; border-radius:4px; background:#fff; padding:16px 20px; margin-bottom:12px; box-shadow:5px 5px 0 #111; animation:rise .35s backwards; }
+.lbcard .rk { grid-row:1 / 3; font:900 26px var(--display); text-align:center; }
+.lbcard.top1 .rk { color:#c99a06; } .lbcard.top2 .rk { color:#8a8a90; } .lbcard.top3 .rk { color:#b0662c; }
+.lbcard .who b { font-size:18px; font-weight:900; } .lbcard .who .wl { display:block; font-size:13px; color:#666; margin-top:2px; }
+.lbcard .who .me { font:900 10px var(--mono); background:#111; color:#fff; border-radius:6px; padding:2px 7px; margin-left:6px; vertical-align:2px; }
+.lbcard .lv { justify-self:end; align-self:start; font:900 14px var(--mono); border:1.5px solid #111; border-radius:8px; padding:5px 12px; }
+.lbcard .deck { grid-column:2 / 4; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.lbcard .deck > small { font-size:12px; font-weight:800; color:#555; margin-right:4px; }
+.lbcard .deck span { width:50px; height:50px; border-radius:10px; overflow:hidden; border:2px solid var(--rc, #bdbdba); background:#f2f2f0; }
+.lbcard .deck img { width:100%; height:100%; object-fit:cover; }
+.lbcard.me { background:#fffbea; border-color:#c99a06; box-shadow:5px 5px 0 #c99a06; }
+.lbcard.msg { display:block; text-align:center; color:#666; font-size:13px; box-shadow:none; border-width:1px; }
+.lbme2 { display:flex; align-items:center; gap:14px; border:2px dashed #111; border-radius:10px; padding:12px 16px; margin-bottom:16px; background:#fff; }
+.lbme2 .rk { font:900 24px var(--mono); min-width:56px; } .lbme2 .rk small { display:block; font:800 8px var(--mono); letter-spacing:.2em; color:#888; }
+.lbme2 b { font-size:16px; } .lbme2 small { font-size:12px; color:#666; }
+.lbme2 .deck img { width:100%; height:100%; object-fit:cover; display:block; }
+@media (max-width:640px) { .podium { gap:8px; min-height:280px; } .pod .av { width:70px; height:70px; } .pod.r2 .av, .pod.r3 .av { width:60px; height:60px; } .pod b { font-size:14px; } .pod .blk { font-size:34px; } .pod.r1 .blk { height:130px; } .pod.r2 .blk { height:96px; } .pod.r3 .blk { height:70px; } .lbcard { grid-template-columns:52px minmax(0,1fr) auto; padding:12px 14px; } .lbcard .deck span { width:40px; height:40px; } }
 /* 업데이트 오버레이 (잠수함 패치) */
 .update-overlay { position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; padding:20px; background:rgba(10,10,9,.82); backdrop-filter:blur(4px); }
 .update-overlay.show { display:flex; }
@@ -797,13 +826,16 @@ input.text::placeholder { color:#555; }
 <div class="modal" id="levelUp"><div class="box"><span class="shock"></span><span class="num" id="lvNum">2</span><h3>LEVEL UP!</h3><p class="note" id="lvMsg" style="margin:0"></p><span class="rw" id="lvReward">◆ 100</span><button class="btn primary wide" id="btnLvOk">확인</button></div></div>
 <div class="modal" id="dlg"><div class="box"><span class="ico" id="dlgIco"></span><h3 id="dlgTitle"></h3><div class="bd" id="dlgBody"></div><div class="bt"><button class="btn" id="dlgNo">취소</button><button class="btn primary" id="dlgOk">확인</button></div></div></div>
 <!-- 리더보드 화면 -->
-<div id="screen-lb" class="screen dark grid-bg">
-  <div class="band">
-    <div class="top"><button class="btn back" data-back>← 뒤로</button><h2>리더보드</h2><span class="sp"></span><span class="pill" id="lbConn">오프라인</span></div>
-    <div class="lbme" id="lbMe"></div>
-    <div class="lbhead"><span>#</span><span>이름</span><span>LV</span><b>W</b><b>L</b></div>
-    <div class="lblist" id="lbList"></div>
-    <div class="note" style="text-align:center;margin-top:18px">BETA 기준 · 봇전을 포함한 누적 전적 · 시즌 기록은 정식 오픈부터 <button class="btn" id="lbRetry" style="padding:4px 12px;font-size:11px">다시 시도</button></div>
+<div id="screen-lb" class="screen">
+  <div class="lbtop"><div class="in">
+    <div class="top"><button class="btn back" data-back>← 로비</button><h2>리더보드</h2><span class="sp"></span><div class="lbtabs" id="lbTabs"><button data-lb="level" class="on">레벨</button><button data-lb="wins">승리</button></div></div>
+    <div class="lbsub" id="lbSub"></div>
+    <div class="podium" id="lbPodium"></div>
+  </div></div>
+  <div class="lbbody">
+    <div class="lbnote"><span id="lbNote">상위 50명</span><span class="sp"></span><span class="pill" id="lbConn">오프라인</span><button class="btn" id="lbRetry" style="padding:4px 12px;font-size:11px">다시 시도</button></div>
+    <div class="lbme2" id="lbMe"></div>
+    <div id="lbList"></div>
   </div>
 </div>
 <!-- 업데이트 안내 (잠수함 패치 · 전작 UX 이식) -->
@@ -956,13 +988,10 @@ async function lbPush() { // 전적 갱신 후 호출 (실패해도 게임은 �
   if (!FB.on) return;
   try {
     const ref = FB.sdk.doc(FB.db, 'jhbt2lb', FB.uid);
-    await FB.sdk.setDoc(ref, {
-      nickname: (profile.nick || '이름없음').slice(0, 12),
-      level: Math.min(999, profile.level | 0),
-      wins: Math.min(99999, profile.wins | 0),
-      losses: Math.min(99999, profile.losses | 0),
-      updatedAt: FB.sdk.serverTimestamp()
-    });
+    const base = { nickname: (profile.nick || '이름없음').slice(0, 12), level: Math.min(999, Math.max(1, profile.level | 0)), wins: Math.min(99999, profile.wins | 0), losses: Math.min(99999, profile.losses | 0), updatedAt: FB.sdk.serverTimestamp() };
+    const deck = (profile.deck || []).filter(id => /^[a-z_]{1,24}$/.test(id)).slice(0, 5);
+    await FB.sdk.setDoc(ref, { ...base, deck, fav: favChar(), xp: Math.min(1000000, Math.max(0, profile.xp | 0)) })
+      .catch(() => FB.sdk.setDoc(ref, base)); // firestore.rules 를 새로 게시하기 전이면 예전 모양으로
   } catch (e) { console.warn('[jhbt2] 전적 업로드 실패', e); }
 }
 
@@ -1595,7 +1624,7 @@ function pickTile(side, preferRow) { // 전작 v42PickTile
   }
   return null;
 }
-function placeAt(side, t, id) { S.place[side][t] = { id, lv: 1 }; (S.fx || (S.fx = [])).push({ side, t, kind: 'drop' }); if (side === 'a') sfx('place'); }
+function placeAt(side, t, id) { S.place[side][t] = { id, lv: 1 }; if (side === 'a') { const c = profile.useCount || (profile.useCount = {}); c[id] = (c[id] || 0) + 1; } (S.fx || (S.fx = [])).push({ side, t, kind: 'drop' }); if (side === 'a') sfx('place'); }
 function levelUp(side, t) { const p = S.place[side][t]; if (p && p.lv < CFG.MAX_LV) p.lv++; (S.fx || (S.fx = [])).push({ side, t, kind: 'merge' }); if (side === 'a') sfx('merge'); return p; }
 // ── 라운드 ──
 function startRound() {
@@ -2504,6 +2533,12 @@ $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('btnC
 // tag: new 신규 · buff 상향 · nerf 하향 · adjust 조정 · fix 수정 · system 시스템
 const PN_TAG = { new: '신규', buff: '상향', nerf: '하향', adjust: '조정', fix: '수정', system: '시스템' };
 const PATCH_NOTES = [
+  { v: '0.11.0', date: '2026.10.22', title: '리더보드 개편', sections: [
+    { title: '변경', items: [
+      { icon: '🏆', name: '리더보드', tag: 'adjust', desc: '전작처럼 <b>1~3위 단상</b> · 카드마다 <b>전적 · 승률 · 덱 5기</b> · <b>레벨 / 승리</b> 탭.' },
+      { icon: '★', name: '대표 지후', tag: 'new', desc: '가장 많이 놓은 지후가 단상의 <b>대표 초상화</b>로.' },
+    ] },
+  ] },
   { v: '0.10.0', date: '2026.10.22', title: '손맛 업데이트', sections: [
     { title: '신규', items: [
       { icon: '💥', name: '공격 이펙트', tag: 'new', desc: '맞은 자리에 <b>불꽃</b> (지후 색) · 원거리는 <b>총구 섬광</b> · 큰 한 방(암살 첫 공격 등)은 <b>화면 흔들림</b>.' },
@@ -2623,50 +2658,62 @@ function renderSettings() {
   $('setNickOk').onclick = () => { const n = $('setNick').value.trim().slice(0, 12); if (!n) return banner('닉네임을 넣어 주세요'); profile.nick = n; save(); renderLobby(); banner('닉네임을 바꿨어요'); };
 }
 
-// ═════════ 리더보드 화면 ═════════
+// ═════════ 리더보드 화면 (전작처럼: 1~3위 단상 · 카드마다 전적 · 덱) ═════════
+// 탭: 레벨 (같으면 경험치) · 승리. 대표 지후 = 가장 많이 놓은 지후 (없으면 덱 첫 칸)
 const LB_TOP = 50;
-function lbRow(i, d, me) {
+let lbTab = 'level';
+function favChar() { const c = profile.useCount || {}, ids = Object.keys(c).filter(id => CHARS[id]); return ids.sort((a, b) => c[b] - c[a])[0] || (profile.deck || [])[0] || ''; }
+const lbPic = id => (CHARS[id] ? pic(id) : '');
+function lbDeck(d) { const deck = Array.isArray(d.deck) ? d.deck.filter(id => CHARS[id]).slice(0, 5) : []; return deck.length ? `<div class="deck"><small>덱</small>${deck.map(id => `<span style="--rc:var(--r-${CHARS[id].rarity})" title="${CHARS[id].name}">${pic(id)}</span>`).join('')}</div>` : '<div class="deck"><small>덱 기록 없음</small></div>'; }
+function lbCard(i, d, me) {
   const w = Number(d.wins) || 0, l = Number(d.losses) || 0;
-  return `<div class="lbrow${i === 0 ? ' top1' : i === 1 ? ' top2' : i === 2 ? ' top3' : ''}${me ? ' me' : ''}"><span class="rk">${i + 1}</span><span class="nm">${esc(String(d.nickname || '?').slice(0, 12))}</span><span class="st">Lv.${clamp(Number(d.level) || 1, 1, 999)}</span><span class="st w">${w.toLocaleString()}</span><span class="st">${l.toLocaleString()}</span></div>`;
+  return `<div class="lbcard${i < 3 ? ' top' + (i + 1) : ''}${me ? ' me' : ''}" style="animation-delay:${Math.min(0.5, i * 0.03).toFixed(2)}s"><span class="rk">${i + 1}위</span>
+    <span class="who"><b>${esc(String(d.nickname || '?').slice(0, 12))}</b>${me ? '<span class="me">나</span>' : ''}<span class="wl">${w.toLocaleString()}승 ${l.toLocaleString()}패${w + l ? ` · 승률 ${Math.round(w / (w + l) * 100)}%` : ''}</span></span>
+    <span class="lv">Lv.${clamp(Number(d.level) || 1, 1, 999)}</span>${lbDeck(d)}</div>`;
+}
+function lbPodium(rows) {
+  const pod = (i, cls) => { const r = rows[i]; if (!r) return `<div class="pod ${cls} empty"><span class="av"><span></span></span><b>—</b><small>&nbsp;</small><div class="blk">${i + 1}</div></div>`;
+    const d = r.data, fav = CHARS[d.fav] ? d.fav : (Array.isArray(d.deck) ? d.deck.find(id => CHARS[id]) : '');
+    return `<div class="pod ${cls}"><span class="av"><span>${fav ? lbPic(fav) : ''}</span><em>Lv.${clamp(Number(d.level) || 1, 1, 999)}</em></span><b>${esc(String(d.nickname || '?').slice(0, 12))}</b><small>${(Number(d.wins) || 0).toLocaleString()}승 ${(Number(d.losses) || 0).toLocaleString()}패</small><div class="blk">${i + 1}</div></div>`; };
+  $('lbPodium').innerHTML = pod(1, 'r2') + pod(0, 'r1') + pod(2, 'r3');
+}
+function lbHeader() {
+  $('lbTabs').querySelectorAll('[data-lb]').forEach(b => b.classList.toggle('on', b.dataset.lb === lbTab));
+  $('lbSub').innerHTML = lbTab === 'level' ? '<b>레벨 리더보드</b> · 얼마나 즐겼는지 · 초기화되지 않는 순위' : '<b>승리 리더보드</b> · 봇전을 포함한 누적 승리 수';
+  $('lbNote').textContent = `${lbTab === 'level' ? '레벨' : '승리'} 기준 상위 ${LB_TOP}명 · BETA 기록`;
 }
 async function lbLoad() {
   const list = $('lbList'), conn = $('lbConn');
-  conn.textContent = '연결 중…';
-  list.innerHTML = '<div class="lbrow load">불러오는 중…</div>';
-  list.querySelectorAll('.lbrow.me').forEach(() => {});
+  lbHeader(); conn.textContent = '연결 중…';
+  list.innerHTML = '<div class="lbcard msg">불러오는 중…</div>'; lbPodium([]);
   try {
     const ok = await fbInit();
     if (!ok) throw new Error(FB.err);
     conn.textContent = '온라인';
-    // 내 문서가 없으면 먼저 업로드 (빈 전적도 등록)
-    const myRef = FB.sdk.doc(FB.db, 'jhbt2lb', FB.uid);
-    const myDoc = await FB.sdk.getDoc(myRef);
-    if (!myDoc.exists()) { await lbPush(); }
-    // 상위 50
-    const q = FB.sdk.query(FB.sdk.collection(FB.db, 'jhbt2lb'), FB.sdk.orderBy('wins', 'desc'), FB.sdk.limit(LB_TOP));
-    const snap = await FB.sdk.getDocs(q);
-    const rows = [];
-    let myIdx = -1;
-    snap.forEach(d => { rows.push({ uid: d.id, data: d.data() }); });
-    rows.forEach((r, i) => { if (r.uid === FB.uid) myIdx = i; });
-    if (!rows.length) { list.innerHTML = '<div class="lbrow load">아직 기록이 없어요 — 첫 승리를 달성해 주세요!</div>'; lbMe(null); return; }
-    list.innerHTML = rows.map((r, i) => lbRow(i, r.data, r.uid === FB.uid)).join('');
-    lbMe(myIdx >= 0 ? { rank: myIdx + 1, wins: rows[myIdx].data.wins } : { rank: '—', wins: profile.wins });
-    if (myIdx >= LB_TOP - 1) { // 밖에도 닉네임은 보여주자
-      lbMe({ rank: myIdx + 1, wins: rows[myIdx].data.wins });
-    }
+    await lbPush(); // 내 기록부터 최신으로 (덱 · 대표 지후 포함)
+    const key = lbTab === 'level' ? 'level' : 'wins';
+    const snap = await FB.sdk.getDocs(FB.sdk.query(FB.sdk.collection(FB.db, 'jhbt2lb'), FB.sdk.orderBy(key, 'desc'), FB.sdk.limit(LB_TOP)));
+    const rows = []; snap.forEach(d => rows.push({ uid: d.id, data: d.data() }));
+    if (lbTab === 'level') rows.sort((a, b) => (b.data.level - a.data.level) || ((b.data.xp || 0) - (a.data.xp || 0)) || ((b.data.wins || 0) - (a.data.wins || 0)));
+    else rows.sort((a, b) => (b.data.wins - a.data.wins) || ((a.data.losses || 0) - (b.data.losses || 0)));
+    lbShow(rows, FB.uid);
   } catch (err) {
     conn.textContent = '오프라인';
-    list.innerHTML = `<div class="lbrow load">온라인 연결 실패 <span style="opacity:.6">(${String(err && err.message || err || '').slice(0, 40)})</span><br><span style="opacity:.7">전적은 기기에 저장돼요 · 곧 다시 시도해 주세요</span></div>`;
+    list.innerHTML = `<div class="lbcard msg">온라인 연결 실패 <span style="opacity:.6">(${esc(String(err && err.message || err || '').slice(0, 40))})</span><br>전적은 기기에 저장돼요 · 곧 다시 시도해 주세요</div>`;
     lbMe(null);
   }
 }
-function lbMe(info) {
-  const el = $('lbMe');
-  el.innerHTML = info
-    ? `<span class="rk">${info.rank}<small>MY RANK</small></span><div><b>${esc(profile.nick || '이름없음')}</b><br><small>누적 전적 ${Number(info.wins) || 0} 승</small></div><span class="sp"></span><span class="pill">나</span>`
-    : `<span class="rk">—<small>MY RANK</small></span><div><b>${esc(profile.nick || '이름없음')}</b><br><small>온라인 기록 없음 · 게임 한 판 하면 올라가요</small></div><span class="sp"></span><span class="pill">로컬</span>`;
+function lbShow(rows, myUid) { // 정렬된 [{ uid, data }] 를 단상 · 카드로
+  const myIdx = rows.findIndex(r => r.uid === myUid);
+  lbPodium(rows);
+  $('lbList').innerHTML = rows.length ? rows.map((r, i) => lbCard(i, r.data, r.uid === myUid)).join('') : '<div class="lbcard msg">아직 기록이 없어요 — 첫 승리를 달성해 주세요!</div>';
+  lbMe(myIdx >= 0 ? myIdx + 1 : `${LB_TOP}+`);
 }
+function lbMe(rank) {
+  const w = profile.wins || 0, l = profile.losses || 0;
+  $('lbMe').innerHTML = `<span class="rk">${rank == null ? '—' : rank}<small>MY RANK</small></span><div><b>${esc(profile.nick || '이름없음')}</b> <small>Lv.${profile.level} · ${w}승 ${l}패${rank == null ? ' · 온라인 기록 없음' : ''}</small></div><span class="sp"></span><div class="deck" style="display:flex;gap:4px">${(profile.deck || []).map(id => `<span style="width:34px;height:34px;border-radius:8px;overflow:hidden;border:1.5px solid #111;display:block">${pic(id)}</span>`).join('')}</div>`;
+}
+$('lbTabs').addEventListener('click', e => { const b = e.target.closest('[data-lb]'); if (!b || b.dataset.lb === lbTab) return; lbTab = b.dataset.lb; lbLoad(); });
 
 // ═════════ 업데이트 시스템 · 잠수함 패치 (전작 5.7.5 이식) ═════════
 // 서버의 index.html 앞 4KB만 읽어 배포 버전(메타 태그)을 확인한다. 전체 다운로드는 새로고침할 때만.
@@ -2743,7 +2790,7 @@ questAdd('login', 1); // 오늘 접속
 if (profile.nick) { renderLobby(); show('lobby'); } else show('welcome');
 runBoot(); // 접속 로딩 (인트로)
 startUpdateChecks(); // PWA 등록 + 5분마다 새 버전 확인
-window.__jb2 = { S, CHARS, CFG, A, profile: () => profile, newMatch, startRound, choosePick, tapTile, autoPlace, beginCombat, pull, rollRarity, makeUnit, stepCombat, tileXY, allyOdds, lbLoad, lbPush, fbInit }; // BETA 테스트용
+window.__jb2 = { S, CHARS, CFG, A, profile: () => profile, newMatch, startRound, choosePick, tapTile, autoPlace, beginCombat, pull, rollRarity, makeUnit, stepCombat, tileXY, allyOdds, lbLoad, lbPush, fbInit, lbShow }; // BETA 테스트용
 })();
 </script>
 </body>

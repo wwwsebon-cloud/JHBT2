@@ -541,7 +541,7 @@ service cloud.firestore {
 
     // ═════════ 지후배틀 2 (JHBT2) · BETA 리더보드 ═════════
     // 같은 jihoobattle 프로젝트라 규칙 파일은 하나뿐이다 — 이 파일은 지후배틀 1 규칙 전체 + 지후배틀 2 블록.
-    // 문서 ID = 인증 UID (지금은 익명 인증). 자기 문서만 쓰고, 로그인한 사람이면 누구나 읽는다.
+    // 리더보드 문서 ID = 인증 UID (게스트는 익명 인증 · 로그인하면 UID 계정). 자기 문서만 쓰고, 로그인한 사람이면 누구나 읽는다.
     // deck(덱 5기) · fav(대표 지후) · xp(같은 레벨 순위용)는 0.11.0 부터 · 예전 클라이언트는 없이 올린다.
     function validJb2Lb(d) {
       return d.keys().hasAll(['nickname', 'level', 'wins', 'losses', 'updatedAt'])
@@ -554,6 +554,33 @@ service cloud.firestore {
         && (!('fav' in d) || (d.fav is string && (d.fav == '' || d.fav.matches('^[a-z_]{1,24}$'))))
         && (!('xp' in d) || (d.xp is int && d.xp >= 0 && d.xp <= 1000000))
         && d.updatedAt == request.time;
+    }
+    // 지후배틀 2 서버 백업: 로그인한 계정(UID 계정) 본인만 읽고 쓴다. payload = 프로필 JSON 문자열
+    function validJb2Backup(d) {
+      return d.keys().hasOnly(['payload', 'savedAt', 'updatedAt'])
+        && d.payload is string && d.payload.size() <= 100000
+        && d.savedAt is int && d.savedAt >= 0
+        && d.updatedAt == request.time;
+    }
+    match /jb2_backups/{uid} {
+      allow get, delete: if owner(uid);
+      allow create, update: if owner(uid) && !banned() && request.auth.token.email != null && validJb2Backup(request.resource.data);
+    }
+    // 지후배틀 2 닉네임 로그인: 문서 ID 'n_' + 소문자 닉네임 · code 는 로그인한 계정 자신의 UID · 먼저 등록한 계정이 주인
+    function validJb2Nick(key, d) {
+      return d.keys().hasOnly(['owner', 'code', 'nickname', 'updatedAt'])
+        && d.owner == request.auth.uid
+        && d.code is string && request.auth.token.email == d.code + '@jihoo-battle.invalid'
+        && d.nickname is string && d.nickname.size() > 0 && d.nickname.size() <= 12
+        && key == 'n_' + d.nickname.lower()
+        && d.updatedAt == request.time;
+    }
+    match /jb2_nicknames/{key} {
+      allow get: if true;
+      allow list: if request.auth != null && resource.data.owner == request.auth.uid;
+      allow create: if request.auth != null && !banned() && validJb2Nick(key, request.resource.data);
+      allow update: if request.auth != null && resource.data.owner == request.auth.uid && validJb2Nick(key, request.resource.data);
+      allow delete: if request.auth != null && resource.data.owner == request.auth.uid;
     }
     match /jhbt2lb/{uid} {
       allow get, list: if request.auth != null;

@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="0.2.0">
+<meta name="jhbt2-version" content="0.3.0">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -53,7 +53,26 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .ccard .rb { position:absolute; top:6px; left:6px; width:10px; height:10px; border-radius:50%; background:var(--rc); }
 .ccard.sel { outline:4px solid var(--orange); }
 .ccard.locked { opacity:.35; }
-.dinfos { margin-top:16px; display:grid; gap:8px; } .dinfo { background:#fff; border:2px solid var(--line); border-radius:10px; padding:10px 12px; font-size:13px; } .dinfo p { margin:4px 0 0; } .dinfo small { color:var(--mute); }
+.deckslot { overflow:hidden; } .deckslot img { width:100%; height:100%; object-fit:cover; }
+.deckslot.swap { outline:3px dashed var(--orange); cursor:pointer; }
+.deckslot.on { cursor:pointer; }
+.deckstatus { margin:10px 0 14px; font-size:13px; color:var(--mute); }
+.cdp { max-width:460px !important; max-height:88vh; overflow:auto; position:relative; }
+.cdp .x { position:absolute; top:10px; right:10px; }
+.cdp .hero { display:flex; gap:14px; align-items:center; }
+.cdp .hero .p { width:110px; height:110px; flex:none; border-radius:16px; overflow:hidden; border:3px solid var(--rc); background:#f2f1ec; display:grid; place-items:center; font-size:56px; }
+.cdp .hero .p img { width:100%; height:100%; object-fit:cover; }
+.cdp .hero h3 { margin:0 0 4px; font-size:22px; }
+.cdp .tags { display:flex; gap:6px; flex-wrap:wrap; }
+.cdp .tags span { font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; border:2px solid var(--line); }
+.cdp .tags .r { background:var(--rc); color:#fff; border-color:var(--rc); }
+.cdp .stats { display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; margin:14px 0; }
+.cdp .stats div { background:#f2f1ec; border-radius:8px; padding:6px 8px; font-size:11px; color:var(--mute); }
+.cdp .stats b { display:block; font-size:15px; color:var(--ink); }
+.cdp h4 { margin:12px 0 4px; font-size:13px; }
+.cdp p { margin:0; font-size:13px; line-height:1.6; }
+.cdp .story { background:#faf8f1; border-left:4px solid var(--rc); padding:10px 12px; border-radius:6px; color:#444; }
+.cdp .eq { margin-top:16px; }
 .deckrow { display:flex; gap:8px; margin:10px 0 16px; flex-wrap:wrap; }
 .deckslot { width:70px; height:70px; border:2px dashed #999; border-radius:12px; display:grid; place-items:center; font-size:34px; background:#fff; }
 .deckslot.on { border-style:solid; border-color:var(--line); }
@@ -64,49 +83,79 @@ button { font:inherit; color:inherit; cursor:pointer; }
 .lives i { width:14px; height:14px; border-radius:50%; background:var(--red); border:2px solid var(--line); }
 .lives i.off { background:#ddd; }
 .speedtag { background:var(--orange); color:#000; }
-.fieldwrap { position:relative; width:100%; max-width:900px; margin:0 auto; }
-#field { position:relative; width:720px; height:300px; transform-origin:0 0; background:#e9e7df repeating-linear-gradient(90deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px), repeating-linear-gradient(0deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px); border:3px solid var(--line); border-radius:14px; overflow:hidden; }
-#field::after { content:''; position:absolute; left:50%; top:0; bottom:0; border-left:3px dashed rgba(0,0,0,.25); }
-.tile { position:absolute; width:60px; height:60px; border:2px solid rgba(0,0,0,.12); background:rgba(255,255,255,.35); }
+.fieldwrap { position:relative; width:100%; max-width:1100px; margin:0 auto; }
+#field { position:relative; transform-origin:0 0; background:#e9e7df repeating-linear-gradient(90deg, transparent 0 59px, rgba(0,0,0,.045) 59px 60px), repeating-linear-gradient(0deg, transparent 0 59px, rgba(0,0,0,.045) 59px 60px); border:3px solid var(--line); border-radius:14px; overflow:hidden; }
+#field::after { content:''; position:absolute; left:50%; top:0; bottom:0; border-left:3px dashed rgba(0,0,0,.22); }
+.tile { position:absolute; width:100px; height:100px; box-sizing:border-box; border:2px dashed rgba(0,0,0,.18); border-radius:12px; background:rgba(255,255,255,.35); }
 .tile.ally { background:rgba(47,124,246,.07); }
 .tile.enemy { background:rgba(229,50,45,.06); }
 .tile.hot { background:rgba(255,138,31,.35); }
 .tile.bad { background:rgba(229,50,45,.3); }
-.unit { position:absolute; width:56px; height:56px; margin:-28px 0 0 -28px; border-radius:50%; border:3px solid var(--blue); background:#fff; display:grid; place-items:center; font-size:28px; z-index:2; transition:filter .15s; user-select:none; }
+/* 유닛 — 전작 JHBT 의 .unit 그대로 (74px · 레벨마다 +6px · 체력/쿨/쉴드 바는 아래) */
+.unit { position:absolute; width:74px; height:74px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; border:3px solid var(--blue); background:#fff; box-shadow:0 3px 8px rgba(0,0,0,.35); transform:translate(-50%,-50%); transition:filter .15s ease, width .25s ease, height .25s ease; will-change:left, top; z-index:5; user-select:none; }
 .unit.enemy { border-color:var(--red); }
-.unit img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
-.unit .lv { position:absolute; top:-8px; right:-8px; background:var(--ink); color:#fff; font-size:11px; font-weight:900; border-radius:8px; padding:1px 5px; }
-.unit .bars { position:absolute; left:-4px; right:-4px; top:58px; display:flex; flex-direction:column; gap:2px; }
-.unit .bar { height:4px; background:rgba(0,0,0,.18); border-radius:3px; overflow:hidden; }
-.unit .bar i { display:block; height:100%; width:100%; transition:width .12s; }
-.unit .bar.hp i { background:var(--green); }
-.unit.enemy .bar.hp i { background:var(--red); }
-.unit .bar.sh i { background:var(--blue); }
-.unit .bar.sk i { background:var(--orange); }
-.unit .bar.cd i { background:var(--yellow); }
-.unit .bar.sh.zero { display:none; }
-.unit.dead { opacity:0; transform:scale(.4); transition:opacity .4s, transform .4s; pointer-events:none; }
-.unit.hit { filter:brightness(1.6); }
-.unit.cast { animation:cast .45s ease; }
-@keyframes cast { 40% { transform:scale(1.25); box-shadow:0 0 0 8px rgba(255,138,31,.45); } }
-.unit .st { position:absolute; bottom:-6px; left:-8px; font-size:13px; }
-.unit.frozen { filter:hue-rotate(180deg) saturate(2) brightness(1.1); }
-.unit.stunned { animation:wobble .5s linear infinite; }
+.unit.lvl2 { width:80px; height:80px; } .unit.lvl3 { width:86px; height:86px; } .unit.lvl4 { width:92px; height:92px; } .unit.lvl5 { width:98px; height:98px; }
+.unit .unit-icon { position:absolute; inset:0; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+.unit .unit-icon img { width:100%; height:100%; object-fit:cover; }
+.unit .unit-level { position:absolute; bottom:-2px; right:-2px; width:18px; height:18px; border-radius:50%; background:linear-gradient(135deg, #c98a1d, #e8b84b); color:#1a1205; font-size:10px; font-weight:900; display:flex; align-items:center; justify-content:center; border:1.5px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.3); z-index:6; }
+.unit .status-icons { position:absolute; top:-12px; left:50%; transform:translateX(-50%); display:flex; gap:2px; font-size:10px; z-index:6; }
+.unit .status-icons span { background:rgba(0,0,0,.6); border-radius:50%; width:14px; height:14px; display:flex; align-items:center; justify-content:center; }
+.unit .unit-hpbar-wrap { position:absolute; bottom:-10px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:3px; }
+.unit .unit-hpbar-track { width:44px; height:5px; background:rgba(0,0,0,.55); border-radius:3px; overflow:hidden; box-shadow:0 0 0 1px rgba(255,255,255,.2); }
+.unit .unit-hpbar { height:100%; width:100%; background:#32c979; }
+.unit.enemy .unit-hpbar { background:#eb5966; }
+.unit .unit-hp-text { font-size:8.5px; font-weight:800; color:var(--ink); text-shadow:0 1px 0 rgba(255,255,255,.7); white-space:nowrap; line-height:1; }
+.unit .unit-cdbar-wrap { position:absolute; bottom:-16px; left:50%; transform:translateX(-50%); width:44px; height:3px; background:rgba(0,0,0,.45); border-radius:2px; overflow:hidden; display:none; box-shadow:0 0 0 1px rgba(255,255,255,.15); }
+.unit.has-cd .unit-cdbar-wrap { display:block; }
+.unit.has-shield .unit-cdbar-wrap { bottom:-22px; }
+.unit .unit-cdbar { height:100%; width:0; background:#ff9b32; } /* 주황: 스킬 게이지 (타격 · 마나) */
+.unit .unit-cdbar.cd { background:#ffd23f; }                     /* 노랑: 쿨타임 */
+.unit .unit-shieldbar-wrap { position:absolute; bottom:-16px; left:50%; transform:translateX(-50%); width:44px; height:3px; background:rgba(0,0,0,.4); border-radius:3px; overflow:hidden; display:none; }
+.unit.has-shield .unit-shieldbar-wrap { display:block; }
+.unit .unit-shieldbar { height:100%; width:100%; background:#65cfff; } /* 파랑: 쉴드 */
+.unit.dead { opacity:0; transform:translate(-50%,-50%) scale(.3); pointer-events:none; }
+.unit.hit-flash { filter:brightness(2.4) saturate(.4); }
+.unit.hit-flash .unit-icon { animation:hit-shake .16s ease-out; }
+@keyframes hit-shake { 0% { transform:translate(0,0); } 25% { transform:translate(-3px,1px); } 50% { transform:translate(3px,-1px); } 75% { transform:translate(-2px,0); } 100% { transform:translate(0,0); } }
+.unit.hit-flash-big .unit-icon { animation:hit-shake-big .22s ease-out; }
+@keyframes hit-shake-big { 0% { transform:translate(0,0) scale(1); } 20% { transform:translate(-5px,2px) scale(1.05); } 45% { transform:translate(5px,-2px) scale(1.05); } 70% { transform:translate(-3px,1px) scale(1.02); } 100% { transform:translate(0,0) scale(1); } }
+.unit.stealthed { opacity:.4; filter:saturate(.6); }
+.unit.frozen .unit-icon { filter:hue-rotate(180deg) saturate(2) brightness(1.1); }
+.unit.stunned .unit-icon { animation:wobble .5s linear infinite; }
 @keyframes wobble { 50% { transform:rotate(8deg); } }
-.dmg { position:absolute; z-index:5; font-weight:900; font-size:12px; pointer-events:none; animation:float .8s ease-out forwards; text-shadow:0 1px 0 #fff, 0 -1px 0 #fff, 1px 0 0 #fff, -1px 0 0 #fff; }
-.dmg.skill { color:var(--orange); font-size:15px; }
-.dmg.dot { color:#d9480f; font-size:11px; }
-.tg { position:absolute; border-radius:50%; pointer-events:none; z-index:1; transform:translate(-50%,-50%); }
-.tg.fire { animation:tgFire .18s ease-out forwards; }
-@keyframes tgFire { to { opacity:0; } }
-.unit.stealth { opacity:.35; }
-.dmg.heal { color:var(--green); }
-.dmg.miss { color:var(--mute); font-size:13px; }
-@keyframes float { to { transform:translateY(-34px); opacity:0; } }
+.unit.cast { animation:cast .45s ease; }
+@keyframes cast { 40% { scale:1.18; box-shadow:0 0 0 8px rgba(255,138,31,.45); } }
+/* 공격 예고(텔레그래프) — 전작 그대로: 공격 직전 범위가 투명한 붉은색으로 뜨고, 왼쪽부터 색이 차올라 가득 차면 공격 */
+.fx-telegraph { position:absolute; pointer-events:none; z-index:4; transform:translate(-50%,-50%); }
+.fx-telegraph .tg-layer { position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible; }
+.fx-telegraph .tg-base path { fill:rgba(220,50,40,.04); stroke:rgba(220,50,40,.22); stroke-width:1.2; stroke-linejoin:round; }
+.fx-telegraph .tg-fill path { fill:rgba(220,50,40,.14); stroke:rgba(220,50,40,.38); stroke-width:1.4; stroke-linejoin:round; }
+.fx-telegraph.fired { animation:tg-fired .2s ease-out forwards; }
+@keyframes tg-fired { 0% { opacity:1; } 100% { opacity:0; } }
+/* 베기 · 투사체 · 피해 숫자 · 사망 */
+.fx-slash { position:absolute; z-index:9; pointer-events:none; width:54px; height:54px; transform:translate(-50%,-50%); }
+.fx-slash svg { width:100%; height:100%; overflow:visible; }
+.fx-slash path { fill:none; stroke:#2b2620; stroke-width:4; stroke-linecap:round; stroke-dasharray:70; stroke-dashoffset:70; filter:drop-shadow(0 0 3px rgba(255,255,255,.9)); animation:slash-draw .22s ease-out forwards; }
+@keyframes slash-draw { 0% { stroke-dashoffset:70; opacity:1; } 60% { stroke-dashoffset:0; opacity:1; } 100% { stroke-dashoffset:0; opacity:0; } }
+.fx-projectile { position:absolute; width:8px; height:8px; border-radius:50%; z-index:8; pointer-events:none; box-shadow:0 0 8px 2px currentColor; transform:translate(-50%,-50%); }
+.fx-damage-num { position:absolute; font-size:16px; font-weight:900; color:#ff4040; -webkit-text-stroke:4px #000; paint-order:stroke fill; text-shadow:0 2px 3px rgba(0,0,0,.45); pointer-events:none; z-index:12; white-space:nowrap; animation:dmg-float .7s ease-out forwards; }
+.fx-damage-num.crit-like { color:#ffd23f; font-size:19px; }
+.fx-damage-num.heal-like { color:#4be37a; }
+.fx-damage-num.num { font-size:19px; letter-spacing:1.5px; }
+.fx-damage-num.num-mine { color:#fff; }
+.fx-damage-num.num-theirs { color:#ff3b3b; }
+.fx-damage-num.num-burn { color:#ff8a8a; }
+.fx-damage-num.num-heal { color:#2fd35a; }
+.fx-damage-num.crit-hit { color:#ff9d00; font-size:25px; letter-spacing:2px; -webkit-text-stroke:5px #000; }
+@keyframes dmg-float { 0% { transform:translateY(0); opacity:1; } 100% { transform:translateY(-30px); opacity:0; } }
+.fx-death-fx { position:absolute; pointer-events:none; z-index:11; }
+.fx-death-fx .death-ring { position:absolute; left:-32px; top:-32px; width:64px; height:64px; border-radius:50%; border:2px solid var(--death-color, #999); animation:death-ring-expand .38s ease-out forwards; }
+@keyframes death-ring-expand { 0% { transform:scale(.125); opacity:.9; } 100% { transform:scale(1); opacity:0; } }
+.fx-death-fx .death-shard { position:absolute; left:50%; top:50%; width:6px; height:6px; background:var(--death-color, #999); border-radius:1px; transform:translate(-50%,-50%); animation:death-shard-fly .5s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes death-shard-fly { 0% { transform:translate(-50%,-50%) rotate(0deg) scale(1); opacity:1; } 100% { transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--rot)) scale(.3); opacity:0; } }
 .fx-ring { position:absolute; border-radius:50%; border:4px solid var(--orange); pointer-events:none; z-index:4; animation:ring .45s ease-out forwards; }
 @keyframes ring { from { transform:translate(-50%,-50%) scale(.3); opacity:1; } to { transform:translate(-50%,-50%) scale(1); opacity:0; } }
-.fx-shot { position:absolute; width:7px; height:7px; margin:-3.5px; border-radius:50%; background:var(--ink); z-index:3; pointer-events:none; }
-.stack2 { position:absolute; bottom:-8px; right:-10px; background:var(--orange); color:#000; font-size:11px; font-weight:900; border-radius:8px; padding:1px 5px; border:2px solid var(--line); }
+.stack2 { position:absolute; z-index:7; top:-6px; left:-8px; background:var(--orange); color:#000; font-size:11px; font-weight:900; border-radius:8px; padding:1px 5px; border:2px solid var(--line); }
 .hand { display:flex; gap:8px; min-height:86px; padding:8px; margin:10px auto 0; max-width:900px; border:2px solid var(--line); border-radius:12px; background:#fff; overflow-x:auto; }
 .hcard { flex:none; width:68px; height:68px; border:2px solid var(--line); border-radius:12px; display:grid; place-items:center; font-size:34px; background:#fff; position:relative; touch-action:none; cursor:grab; animation:pop .25s ease; }
 .hcard .lv { position:absolute; top:-7px; right:-7px; background:var(--ink); color:#fff; font-size:11px; font-weight:900; border-radius:8px; padding:1px 5px; }
@@ -191,10 +240,10 @@ input.text { width:100%; border:2px solid var(--line); border-radius:10px; paddi
 </div>
 <!-- 덱 -->
 <div id="screen-deck" class="screen">
-  <div class="top"><button class="btn" data-back>← 로비</button><h2>덱 설정</h2><span class="sp"></span><span class="note">눌러서 넣고 빼기 · 5기</span></div>
+  <div class="top"><button class="btn" data-back>← 로비</button><h2>덱 설정</h2><span class="sp"></span><span class="note">5기</span></div>
   <div class="deckrow" id="deckRow"></div>
+  <div class="deckstatus" id="deckStatus"></div>
   <div class="cards" id="deckCards"></div>
-  <div class="dinfos" id="deckInfo"></div>
 </div>
 <!-- 가차 -->
 <div id="screen-gacha" class="screen">
@@ -225,7 +274,7 @@ input.text { width:100%; border:2px solid var(--line); border-radius:10px; paddi
     <button class="btn primary" id="btnReady">준비 완료 ▶</button>
     <button class="btn" id="btnQuit">포기</button>
   </div>
-  <div class="note" style="text-align:center; margin-top:6px" id="deployTip">지후를 끌어다 내 진영(왼쪽 3x3)에 놓으세요 · 같은 지후 · 같은 레벨끼리 끌어 겹치면 합체</div>
+  <div class="note" style="text-align:center; margin-top:6px" id="deployTip">지후를 끌어다 내 배치 칸(왼쪽 3x3)에 놓으세요 · 같은 지후 · 같은 레벨끼리 끌어 겹치면 합체</div>
 </div>
 <!-- 결과 -->
 <div id="screen-result" class="screen">
@@ -234,6 +283,7 @@ input.text { width:100%; border:2px solid var(--line); border-radius:10px; paddi
 <!-- 가차 연출 -->
 <div id="reveal"><div id="revealStage"></div></div>
 <div id="cutscene"></div>
+<div class="modal" id="charModal"><div class="box cdp" id="charBox"></div></div>
 
 <script>
 (function () {
@@ -243,13 +293,14 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // ═════════ CONFIG ═════════
 const CFG = {
-  CELL: 60, COLS: 3, ROWS: 3,              // 배치 구역은 진영마다 3x3 · 1칸 = 60px (전작과 같은 격자 · 사거리 단위)
-  FIELD_COLS: 12, FIELD_ROWS: 5, ZONE_ROW: 1, // 전장 전체 12x5 칸 · 배치 구역은 양 끝 3x3 (위아래 1칸 여유)
+  CELL: 60, COLS: 3, ROWS: 3,              // 1칸 = 60px (전작과 같은 격자 · 사거리 단위) · 배치 구역은 진영마다 3x3
+  MAP_W: 1320, MAP_H: 780,                 // 전장 22x13 칸 (전작 전장처럼 넓게 · 배치 구역만 3x3)
+  TILE: 100, ZONE_GAP: 150,                // 배치 칸 크기 · 가운데 선에서 앞줄 칸까지 거리 (px)
   LIVES: 4, MAX_LV: 5, LV_STEP: 0.2,       // 레벨마다 +20% (복리 아님)
   SUMMON_FIRST: 4, SUMMON_PER_ROUND: 2, HAND_MAX: 8, TILE_CAP: 2,
   ROUND_TIME: 60, FAST_AFTER: 15,          // 15초 뒤 자동 2배속
-  STEP: 1 / 30,
-  UNIT_R: 28, MELEE: 1.6, TG_MAX: 1,        // 근접 사거리 1.6칸 (전작 72px/45px) · 근접 예고 최대 1초
+  STEP: 1 / 60,                            // 전작 PHYS.STEP
+  MELEE: 1.6,                              // 근접 사거리 1.6칸 (전작 72px/45px)
   GACHA: [['legend', 1], ['epic', 4], ['rare', 30], ['common', 65]],
   PULL1: 100, PULL10: 1000,
   START_DIA: 1500,
@@ -272,18 +323,23 @@ const PORTRAITS = {
 // skill (선택): { type: 'hit'|'mana'|'cooldown', need/cd, pct, run(u, A) } — 스킬 피해는 일반 공격력의 %
 // 패시브 훅 (선택): onHit(u, t, A) · onStart(u, A) · tick(u, dt, A) · immune(u) · takenMult(u) · atkMult(u, t)
 const CHARS = {
-  fire: { name: '화염 지후', rarity: 'common', role: '딜러', hp: 3000, atk: 50, atkSpeed: 3, range: 2, speed: 1, portrait: PORTRAITS.fire, starter: true,
+  fire: { name: '화염 지후', rarity: 'common', role: '딜러', hp: 3000, atk: 50, atkSpeed: 3, range: 2, speed: 1, portrait: PORTRAITS.fire, starter: true, color: '#ff6b35',
+    story: '삼겹살을 구워먹다가 부루스타가 폭주해서 전신 화상을 당한 지후입니다. 하지만 그의 불타오르는 삶의 의지와 열정은 곧 불씨로 되살아났어요. 특기는 가스라이팅.',
     passive: '일반 공격이 <b>3초</b> 동안 1초마다 <b>100</b>의 [화상] 피해를 입힌다.',
     onHit(u, t, A) { A.status(t, 'burn', 3, { dps: 100 * u.mult }); } },
-  ice: { name: '얼음 지후', rarity: 'common', role: '컨트롤러', hp: 2700, atk: 75, atkSpeed: 4, range: 3, speed: 1, portrait: PORTRAITS.ice, starter: true,
+  ice: { name: '얼음 지후', rarity: 'common', role: '컨트롤러', hp: 2700, atk: 75, atkSpeed: 4, range: 3, speed: 1, portrait: PORTRAITS.ice, starter: true, color: '#4fc3f7',
+    story: '집에서 실수로 에어컨을 끄지 않고 잠을 자는 바람에 상시로 감기 상태입니다. 그는 격리 처리 당했고, 결국 그도 세상에 등을 돌리고 냉정해졌습니다.',
     passive: '일반 공격이 대상을 <b>1.6초</b> 동안 [빙결]시킨다.',
     onHit(u, t, A) { A.status(t, 'freeze', 1.6); } },
-  sword: { name: '검 지후', rarity: 'common', role: '딜러', hp: 3100, atk: 150, atkSpeed: 1.2, range: 'melee', speed: 1, portrait: PORTRAITS.sword, starter: true,
+  sword: { name: '검 지후', rarity: 'common', role: '딜러', hp: 3100, atk: 150, atkSpeed: 1.2, range: 'melee', speed: 1, portrait: PORTRAITS.sword, starter: true, color: '#8d8d8d',
+    story: '어릴때 놀이동산에서 기념품으로 사왔던 플라스틱 검으로 단련했습니다. 지금은 누구도 넘볼 수 없는 뛰어난 검객입니다.',
     passive: '' },
-  assassin: { name: '암살 지후', rarity: 'common', role: '어쌔신', hp: 2200, atk: 160, atkSpeed: 0.7, range: 'melee', speed: 1, portrait: PORTRAITS.assassin, starter: true,
+  assassin: { name: '암살 지후', rarity: 'common', role: '어쌔신', hp: 2200, atk: 160, atkSpeed: 0.7, range: 'melee', speed: 1, portrait: PORTRAITS.assassin, starter: true, color: '#e84393',
+    story: '남들처럼 평범한 갈색 머리로 염색을 하고싶었으나 미용사가 말을 잘못 알아들어 핑크색 머리로 염색해주자, 해당 미용실에 원한을 품고 미용사를 암살하기 위해 다시 태어났습니다.',
     passive: '게임 시작 <b>2초</b> 뒤 가장 멀리 있는 적의 <b>후방</b>으로 순간이동하고 <b>1초</b> 동안 [은신]. 순간이동 뒤 첫 공격은 공격력의 <b>400%</b>.',
     tick(u, dt, A) { if (u.blinked) return; u.blinkT = (u.blinkT || 0) + dt; if (u.blinkT >= 2) { u.blinked = true; A.blinkBehindFarthest(u); A.status(u, 'stealth', 1); u.nextHitPct = 400; } } },
-  shield: { name: '쉴드 지후', rarity: 'common', role: '탱커', hp: 3000, shield: 1500, atk: 350, atkSpeed: 3, range: 'melee', speed: 1, portrait: PORTRAITS.shield, portraitBroken: PORTRAITS.shield_broken, starter: true,
+  shield: { name: '쉴드 지후', rarity: 'common', role: '탱커', hp: 3000, shield: 1500, atk: 350, atkSpeed: 3, range: 'melee', speed: 1, portrait: PORTRAITS.shield, portraitBroken: PORTRAITS.shield_broken, starter: true, color: '#4f7cff',
+    story: "자청해서 고기방패가 되기로 한 지후입니다. 최근에는 그의 특별한 '취향'에 대해 루머가 돌고 있다고 하지만.. 쉴드 지후는 순수하게 마음씨가 착해서 그런거에요.",
     passive: '쉴드가 있는 동안 <b>모든 상태이상에 면역</b>이고 받는 피해 <b>-25%</b>.',
     immune(u) { return u.shield > 0; }, takenMult(u) { return u.shield > 0 ? 0.75 : 1; } },
 };
@@ -333,152 +389,400 @@ function renderLobby() {
 }
 function banner(text) { const b = document.createElement('div'); b.className = 'banner'; b.textContent = text; document.body.appendChild(b); setTimeout(() => b.remove(), 1300); }
 
-// 덱
+// 덱 — 전작과 같은 방식: 지후를 누르면 상세정보, 거기서 [장착]. 덱이 꽉 차 있으면 바꿀 자리를 고른다
+let pendingEquip = null;
+const DECK_TIP = '지후를 눌러 상세정보에서 장착하세요. 바꾼 덱은 바로 저장돼요.';
 function renderDeck() {
-  $('deckRow').innerHTML = Array.from({ length: 5 }, (_, i) => { const id = profile.deck[i]; return `<div class="deckslot${id ? ' on' : ''}">${id ? pic(id) : ''}</div>`; }).join('');
+  $('deckRow').innerHTML = Array.from({ length: 5 }, (_, i) => { const id = profile.deck[i]; return `<div class="deckslot${id ? ' on' : ''}${pendingEquip ? ' swap' : ''}" data-slot="${i}">${id ? pic(id) : ''}</div>`; }).join('');
   const ids = Object.keys(CHARS).sort((a, b) => RARITY_ORDER[CHARS[b].rarity] - RARITY_ORDER[CHARS[a].rarity]);
   $('deckCards').innerHTML = ids.map(id => { const c = CHARS[id]; return `<div class="ccard${profile.deck.includes(id) ? ' sel' : ''}${owned(id) ? '' : ' locked'}" data-id="${id}" style="--rc:var(--r-${c.rarity})"><span class="rb"></span><div class="pic">${pic(id)}</div><b>${c.name}</b><small>${RARITY[c.rarity]} · ${c.role}</small></div>`; }).join('');
-  $('deckInfo').innerHTML = profile.deck.map(id => { const c = CHARS[id]; return `<div class="dinfo"><b>${c.name}</b> <small>HP ${c.hp.toLocaleString()}${c.shield ? ` + 쉴드 ${c.shield.toLocaleString()}` : ''} · ATK ${c.atk} · ${c.atkSpeed}초 · 사거리 ${c.range === 'melee' ? '근접' : c.range + '칸'}</small>${c.passive ? `<p>${c.passive}</p>` : ''}${c.skill ? `<p>${c.skill.desc}</p>` : ''}</div>`; }).join('');
+  $('deckStatus').innerHTML = pendingEquip ? `<b>${CHARS[pendingEquip].name}</b> 장착 · 위에서 바꿀 자리를 고르세요. <button class="btn" id="eqCancel" style="padding:4px 10px">취소</button>` : DECK_TIP;
+  if (pendingEquip) $('eqCancel').onclick = () => { pendingEquip = null; renderDeck(); };
 }
-$('deckCards').addEventListener('click', e => {
-  const card = e.target.closest('.ccard'); if (!card) return;
-  const id = card.dataset.id;
-  if (!owned(id)) return;
-  const i = profile.deck.indexOf(id);
-  if (i >= 0) profile.deck.splice(i, 1); else if (profile.deck.length < 5) profile.deck.push(id); else return banner('덱은 5기까지');
-  save(); renderDeck();
+function charDetail(id) {
+  const c = CHARS[id], equipped = profile.deck.includes(id), have = owned(id);
+  const rng = c.range === 'melee' ? '근접' : c.range + '칸';
+  const ability = [c.passive && `<p><b>[패시브]</b> ${c.passive}</p>`, c.skill && `<p><b>[스킬]</b> ${c.skill.desc}</p>`].filter(Boolean).join('') || '<p class="note">특수 능력 없음 · 기본기에 충실하다</p>';
+  $('charBox').style.setProperty('--rc', `var(--r-${c.rarity})`);
+  $('charBox').innerHTML = `<button class="btn x" id="cdpClose">✕</button>
+    <div class="hero"><div class="p">${pic(id)}</div><div><h3>${c.name}</h3><div class="tags"><span class="r">${RARITY[c.rarity]}</span><span>${c.role}</span>${have ? `<span>조각 ${profile.shards[id] || 0}</span>` : ''}</div></div></div>
+    <div class="stats"><div>체력<b>${c.hp.toLocaleString()}</b></div><div>쉴드<b>${(c.shield || 0).toLocaleString()}</b></div><div>공격력<b>${c.atk}</b></div><div>공격 간격<b>${c.atkSpeed}초</b></div><div>사거리<b>${rng}</b></div><div>이동속도<b>${c.speed || 1}</b></div></div>
+    <h4>능력</h4>${ability}
+    ${c.story ? `<h4>서사</h4><p class="story">${c.story}</p>` : ''}
+    <button class="btn primary wide eq" id="cdpEquip" ${!have || equipped ? 'disabled' : ''}>${!have ? '미보유' : equipped ? '장착됨' : '장착'}</button>`;
+  $('charModal').classList.add('show');
+  $('cdpClose').onclick = closeCharDetail;
+  $('cdpEquip').onclick = () => requestEquip(id);
+}
+function closeCharDetail() { $('charModal').classList.remove('show'); }
+$('charModal').addEventListener('click', e => { if (e.target === $('charModal')) closeCharDetail(); });
+function requestEquip(id) {
+  if (!owned(id) || profile.deck.includes(id)) return;
+  closeCharDetail();
+  if (profile.deck.length < 5) { profile.deck.push(id); pendingEquip = null; save(); renderDeck(); return; }
+  pendingEquip = id; renderDeck(); window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+$('deckRow').addEventListener('click', e => {
+  const slot = e.target.closest('.deckslot'); if (!slot) return;
+  const i = Number(slot.dataset.slot), id = profile.deck[i];
+  if (pendingEquip) { if (id) profile.deck[i] = pendingEquip; else profile.deck.push(pendingEquip); pendingEquip = null; save(); renderDeck(); return; }
+  if (id) charDetail(id);
 });
+$('deckCards').addEventListener('click', e => { const card = e.target.closest('.ccard'); if (card) charDetail(card.dataset.id); });
 
-// ═════════ 엔진 (전투) ═════════
+// ═════════ 엔진 (전투) — 전작 JHBT 의 전투 · 물리 엔진을 그대로 옮겼다 ═════════
+// 물리(속도 · 질량 · 충돌 해소 physSolvePair) · 이동(moveToward 조향 · 장애물 우회 · 교전 거리 유지) · 근접 120° 부채꼴 예고(SVG 와이프)
+// · 찌르기(attackLunge) · 베기(spawnSlash) · 추적 투사체 · 피해 숫자 · 피격 흔들림 · 사망 이펙트 — 전작 함수 이름 · 수치 그대로.
+// 전작의 수백 지후 특수 분기는 빼고 일반 경로만 남겼다. 지후별 능력은 CHARS 의 훅으로 얹는다.
 const S = { phase: 'idle' }; // 경기 상태
 let uidSeq = 0;
-function tileXY(side, t) { const col = t % 3, row = Math.floor(t / 3), C = CFG.CELL; return { x: (side === 'a' ? col : CFG.FIELD_COLS - 3 + col) * C + C / 2, y: (CFG.ZONE_ROW + row) * C + C / 2 }; }
-const FW = () => CFG.FIELD_COLS * CFG.CELL, FH = () => CFG.FIELD_ROWS * CFG.CELL;
+const WS = CFG.CELL / 45; // 전작 WORLD_SCALE: 45px 격자 기준 수치 → 60px 격자
+const FW = () => CFG.MAP_W, FH = () => CFG.MAP_H;
+// 배치 칸 중심 (tile 0~8 · col 2 가 내 앞줄, 상대는 col 0 이 앞줄)
+function tileXY(side, t) {
+  const col = t % 3, row = Math.floor(t / 3), T = CFG.TILE, cx = FW() / 2;
+  return { x: side === 'a' ? cx - CFG.ZONE_GAP - T * (2 - col) - T / 2 : cx + CFG.ZONE_GAP + T * col + T / 2, y: FH() / 2 + (row - 1) * T };
+}
 function lvMult(lv) { return 1 + CFG.LV_STEP * (lv - 1); }
+const PHYS = { STEP: 1 / 60, SKIN: 3.2, RESTITUTION: 0.045, FRICTION: 0.22, DRAG: 4.4, STEER: 16, WALL_PAD: 30, SOLVER_ITERS: 8, POS_CORR: 0.78, SLOP: 0.55 };
+function unitRadius(u) { return (28 + Math.max(0, ((u && u.lv) || 1) - 1) * 2) * WS; }
+function bodySeparation(a, b) { return unitRadius(a) + unitRadius(b) + 6 * WS; } // 원이 겹치지 않는 최소 중심 거리
+function attackDist(u) { return u.melee ? Math.max(u.range + 6, unitRadius(u) * 2 + 12) : u.range + 6; } // 공격 가능 거리 (사거리 + 아주 작은 여유)
+function holdDist(u, t) { const body = bodySeparation(u, t), maxR = attackDist(u); return Math.min(maxR * 0.82, Math.max(body, maxR * 0.55)); } // 교전 시 유지하고 싶은 거리
+function physMass(u) { return Math.max(0.65, u.maxHp / 2400) * (u.def.role === '탱커' ? 1.4 : 1) * (1 + (u.lv - 1) * 0.16); }
 function makeUnit(side, id, lv, x, y) {
   const c = CHARS[id], m = lvMult(lv);
   const melee = c.range === 'melee';
   const u = { uid: ++uidSeq, side, id, lv, x, y, alive: true, mult: m, melee, maxHp: Math.round(c.hp * m), atk: Math.round(c.atk * m), atkSpeed: c.atkSpeed, range: (melee ? CFG.MELEE : c.range) * CFG.CELL, speed: (c.speed || 1) * CFG.CELL,
-    maxShield: Math.round((c.shield || 0) * m), cd: c.atkSpeed, sk: 0, st: {}, def: c };
-  u.hp = u.maxHp; u.shield = u.maxShield;
+    maxShield: Math.round((c.shield || 0) * m), cd: c.atkSpeed, sk: 0, st: {}, def: c,
+    vx: 0, vy: 0, desVx: 0, desVy: 0, xPrev: x, yPrev: y, _sidestep: (uidSeq & 1) ? 1 : -1, _engaged: false, _outT: 0 };
+  u.hp = u.maxHp; u.shield = u.maxShield; u.mass = physMass(u); u.invMass = 1 / u.mass;
   return u;
 }
 function foes(u) { return S.units.filter(e => e.alive && e.side !== u.side); }
-function targets(u) { return foes(u).filter(e => !(e.st.stealth > 0)); } // [은신]은 노리지 못한다
+function targets(u) { return foes(u).filter(e => !(e.st.stealth > 0)); } // [은신]은 노리지 못한다 (범위 공격에는 맞는다)
 function friends(u) { return S.units.filter(e => e.alive && e.side === u.side); }
 function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 function nearestFoe(u) { let b = null, bd = Infinity; targets(u).forEach(e => { const d = dist(u, e); if (d < bd) { bd = d; b = e; } }); return b; }
 function blocked(u) { return u.st.stun > 0 || u.st.freeze > 0; }
 function effAtk(u) { return u.atk * (u.st.weak > 0 ? 0.85 : 1); }
+
+// ── 피해 · 회복 · 상태이상 ──
 function dealDamage(src, t, amount, opts = {}) {
   if (!t.alive || amount <= 0) return 0;
-  if (src && src.st.blind > 0 && !opts.skill && !opts.dot && rng() < 0.5) { floatText(t, '빗나감', 'miss'); return 0; }
+  if (src && src.st.blind > 0 && !opts.skill && !opts.dot && rng() < 0.5) { dmgNum(t, '빗나감', { crit: true }); return 0; }
   let d = amount * (t.st.weak > 0 ? 1.2 : 1) * (t.def.takenMult ? t.def.takenMult(t) : 1);
   d = Math.round(d);
   const hadShield = t.shield > 0, abs = Math.min(t.shield, d); t.shield -= abs; const hpDmg = d - abs;
-  if (hadShield && t.shield <= 0 && t.def.portraitBroken && t.el) { const img = t.el.querySelector('img'); if (img) img.src = t.def.portraitBroken; floatText(t, '쉴드 깨짐', 'miss'); }
+  if (hadShield && t.shield <= 0 && t.def.portraitBroken && t.el) { const img = t.el.querySelector('.unit-icon img'); if (img) img.src = t.def.portraitBroken; dmgNum(t, '쉴드 깨짐', { crit: true }); }
   t.hp -= hpDmg;
-  floatText(t, d, opts.skill ? 'skill' : opts.dot ? 'dot' : '');
-  if (!opts.dot) { flash(t); if (t.def.skill && t.def.skill.type === 'mana' && !t.st.silence) t.sk = Math.min(t.def.skill.need, t.sk + 6); }
-  if (t.hp <= 0) { t.hp = 0; t.alive = false; if (t.tg) { t.tg.remove(); t.tg = null; } }
+  dmgNum(t, d, { critHit: opts.skill, dot: opts.dot });
+  if (!opts.dot) { hitFlash(t, opts.skill); if (t.def.skill && t.def.skill.type === 'mana' && !t.st.silence) t.sk = Math.min(t.def.skill.need, t.sk + 6); }
+  if (t.hp <= 0) { t.hp = 0; killUnit(t); }
   drawUnit(t);
   return d;
 }
-function heal(src, t, amount) { if (!t.alive) return; const h = Math.min(t.maxHp - t.hp, Math.round(amount)); t.hp += h; floatText(t, '+' + h, 'heal'); drawUnit(t); }
+function heal(src, t, amount) { if (!t.alive) return; const h = Math.min(t.maxHp - t.hp, Math.round(amount)); t.hp += h; dmgNum(t, h, { heal: true }); drawUnit(t); }
 function immune(t) { return !!(t.def.immune && t.def.immune(t)); }
-function addStatus(t, key, sec, extra) { if (!t.alive) return; if (!(STATUS[key] && STATUS[key].buff) && immune(t)) return; /* 면역 */ const cur = t.st[key] || 0; t.st[key] = Math.max(cur, sec); if (extra) t.st[key + 'X'] = extra; drawUnit(t); }
+// 전작 7.6.4 규칙: 빙결 · 기절은 걸려 있는 동안 새로 걸리지 않고, 풀린 뒤 0.5초 동안 다시 걸리지 않는다
+const CC_IMMUNE_SEC = 0.5;
+function addStatus(t, key, sec, extra) {
+  if (!t.alive) return;
+  if (!(STATUS[key] && STATUS[key].buff) && immune(t)) return; /* 면역 */
+  if (STATUS[key] && STATUS[key].block && (blocked(t) || t._ccImm > 0)) return;
+  t.st[key] = Math.max(t.st[key] || 0, sec); if (extra) t.st[key + 'X'] = extra; drawUnit(t);
+}
+function killUnit(u) {
+  u.alive = false; u.vx = 0; u.vy = 0; u.desVx = 0; u.desVy = 0; u._engaged = false;
+  clearTelegraph(u);
+  if (u.el) { u.el.classList.add('dead'); spawnDeathEffect(u); }
+}
 // 스킬 도우미: 스킬 피해는 '일반 공격력의 %'
 const A = {
   dmg: (u, e, pct) => dealDamage(u, e, effAtk(u) * pct / 100, { skill: true }),
   heal: (u, a, pct) => heal(u, a, effAtk(u) * pct / 100),
-  shield: (u, n) => { u.maxShield = Math.max(u.maxShield, Math.round(n)); u.shield = Math.min(u.maxShield, u.shield + Math.round(n)); drawUnit(u); },
+  shield: (u, n) => { u.maxShield = Math.max(u.maxShield, Math.round(n)); u.shield = Math.min(u.maxShield, u.shield + Math.round(n)); if (u.el) u.el.classList.add('has-shield'); drawUnit(u); },
   status: (e, key, sec, extra) => addStatus(e, key, sec, extra),
   enemies: u => targets(u), allies: u => friends(u), nearest: u => nearestFoe(u),
   blinkBehindFarthest: u => { // 가장 멀리 있는 적의 뒤(적 진영 끝 쪽)로 순간이동
     let far = null, fd = -1; targets(u).forEach(e => { const d = dist(u, e); if (d > fd) { fd = d; far = e; } });
     if (!far) return;
-    const dir = far.side === 'e' ? 1 : -1, W = FW();
-    A.ring(u.x, u.y, 0.6); u.x = clamp(far.x + dir * (CFG.UNIT_R * 2 + 4), CFG.UNIT_R, W - CFG.UNIT_R); u.y = far.y; A.ring(u.x, u.y, 0.6); floatText(u, '순간이동', 'skill');
+    const dir = far.side === 'e' ? 1 : -1;
+    A.ring(u.x, u.y, 0.6); physSnap(u, far.x + dir * (bodySeparation(u, far) + 4), far.y); A.ring(u.x, u.y, 0.6); dmgNum(u, '순간이동', { crit: true });
   },
   pick: (list, n) => { const c = list.slice(), out = []; while (out.length < n && c.length) out.push(c.splice(Math.floor(rng() * c.length), 1)[0]); return out; },
-  around: (u, x, y, cells, fn) => foes(u).filter(e => Math.hypot(e.x - x, e.y - y) <= cells * CFG.CELL + CFG.UNIT_R).forEach(fn),
-  fan: (u, cells, deg, fn) => { const t = nearestFoe(u); if (!t) return; const a0 = Math.atan2(t.y - u.y, t.x - u.x), half = deg * Math.PI / 360; foes(u).forEach(e => { const d = dist(u, e); if (d > cells * CFG.CELL + CFG.UNIT_R) return; let da = Math.atan2(e.y - u.y, e.x - u.x) - a0; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; if (Math.abs(da) <= half || d < CFG.UNIT_R * 2) fn(e); }); A.ring(u.x, u.y, cells); },
+  around: (u, x, y, cells, fn) => foes(u).filter(e => Math.hypot(e.x - x, e.y - y) <= cells * CFG.CELL + unitRadius(e)).forEach(fn),
+  fan: (u, cells, deg, fn) => { const t = nearestFoe(u); if (!t) return; const a0 = Math.atan2(t.y - u.y, t.x - u.x); foes(u).forEach(e => { if (inFan(u, e, a0, deg * Math.PI / 360, cells * CFG.CELL)) fn(e); }); },
   ring: (x, y, cells) => { const r = document.createElement('div'); r.className = 'fx-ring'; r.style.left = x + 'px'; r.style.top = y + 'px'; r.style.width = r.style.height = cells * CFG.CELL * 2 + 'px'; $('field').appendChild(r); setTimeout(() => r.remove(), 460); },
-  shot: (u, e, onHit) => { S.shots.push({ x: u.x, y: u.y, t: e, onHit, el: (() => { const s = document.createElement('div'); s.className = 'fx-shot'; $('field').appendChild(s); return s; })() }); },
+  shot: (u, e, onHit) => launchProjectile(u, e, onHit),
 };
 function castSkill(u) {
   if (!u.def.skill) return;
   u.sk = 0; u.el && (u.el.classList.remove('cast'), void u.el.offsetWidth, u.el.classList.add('cast'));
   try { u.def.skill.run.call(u.def.skill, u, A); } catch (e) { console.error(e); }
 }
+function afterHit(u, done) { // 일반 공격이 맞으면 스킬 게이지
+  const sk = u.def.skill; if (!sk || !(done > 0) || u.st.silence || !u.alive) return;
+  if (sk.type === 'hit') u.sk++; if (sk.type === 'mana') u.sk = Math.min(sk.need, u.sk + 20);
+  if ((sk.type === 'hit' || sk.type === 'mana') && u.sk >= sk.need) castSkill(u);
+}
+
+// ── 한 걸음: 상태이상 · 패시브 · 쿨타임 스킬 → 조향 · 공격 (전작 aiSteerAndAttack 일반 경로) ──
 function stepUnit(u, dt) {
   if (!u.alive) return;
   if (immune(u)) for (const k of Object.keys(STATUS)) if (!STATUS[k].buff && u.st[k] > 0) u.st[k] = 0; // 면역: 걸려 있던 것도 지운다
+  const wasBlocked = blocked(u);
+  if (u._ccImm > 0) u._ccImm = Math.max(0, u._ccImm - dt);
   for (const k of Object.keys(STATUS)) if (u.st[k] > 0) {
     u.st[k] = Math.max(0, u.st[k] - dt);
     if (STATUS[k].dot) { u.st[k + 'A'] = (u.st[k + 'A'] || 0) + dt; if (u.st[k + 'A'] >= 1) { u.st[k + 'A'] -= 1; dealDamage(null, u, (u.st[k + 'X'] && u.st[k + 'X'].dps) || 20, { dot: true }); if (!u.alive) return; } }
-    if (u.st[k] <= 0 && u.el) drawUnit(u);
+    if (u.st[k] <= 0) drawUnit(u);
   }
+  if (wasBlocked && !blocked(u)) u._ccImm = CC_IMMUNE_SEC;
   if (u.def.tick) u.def.tick(u, dt, A);
   if (!u.alive) return;
   const sk = u.def.skill;
   if (sk && sk.type === 'cooldown' && !u.st.silence && !blocked(u)) { u.sk = Math.min(sk.cd, u.sk + dt); if (u.sk >= sk.cd) castSkill(u); }
-  if (blocked(u)) { hideTg(u); drawUnit(u); return; }
-  const t = nearestFoe(u); if (!t) { hideTg(u); return; }
-  const d = dist(u, t), reach = Math.max(u.range, CFG.UNIT_R * 2 + 6);
-  if (d > reach) { const step = u.speed * dt; u.x += (t.x - u.x) / d * step; u.y += (t.y - u.y) / d * step; }
-  u.cd -= dt;
-  const inRange = d <= reach + 4;
-  const windup = Math.min(CFG.TG_MAX, u.atkSpeed * 0.85);
-  if (u.melee && inRange && u.cd <= windup) showTg(u, t, 1 - Math.max(0, u.cd) / windup); else if (u.melee) hideTg(u);
-  if (inRange && u.cd <= 0) {
-    u.cd = u.atkSpeed;
-    const pct = u.nextHitPct || 100; u.nextHitPct = 0;
-    const hitOne = e => { if (!e.alive) return 0; const done = dealDamage(u, e, effAtk(u) * pct / 100, pct > 100 ? { skill: true } : {}); if (done > 0 && u.def.onHit) u.def.onHit(u, e, A); return done; };
-    const after = done => { if (!sk || !(done > 0) || u.st.silence) return; if (sk.type === 'hit') u.sk++; if (sk.type === 'mana') u.sk = Math.min(sk.need, u.sk + 20); if ((sk.type === 'hit' || sk.type === 'mana') && u.sk >= sk.need && u.alive) castSkill(u); };
-    if (u.melee) { // 근접: 대상 방향 120° 부채꼴 안의 모든 적
-      fireTg(u, t);
-      const a0 = Math.atan2(t.y - u.y, t.x - u.x), half = Math.PI / 3; let any = 0;
-      targets(u).forEach(e => { const de = dist(u, e); if (de > reach + CFG.UNIT_R) return; let da = Math.atan2(e.y - u.y, e.x - u.x) - a0; while (da > Math.PI) da -= 2 * Math.PI; while (da < -Math.PI) da += 2 * Math.PI; if (Math.abs(da) <= half || de < CFG.UNIT_R * 1.5) any += hitOne(e); });
-      after(any);
-    } else A.shot(u, t, () => after(hitOne(t)));
+  aiSteerAndAttack(u, dt);
+}
+function aiSteerAndAttack(u, dt) {
+  u.desVx = 0; u.desVy = 0;
+  if (blocked(u)) { clearTelegraph(u); return; }
+  const target = nearestFoe(u);
+  if (!target) { clearTelegraph(u); u._engaged = false; return; }
+  const d = dist(u, target), reach = attackDist(u);
+  if (d <= reach) {
+    u._engaged = true; u._outT = 0;
+    const hold = holdDist(u, target);
+    if (d < hold * 0.88 || d > reach * 0.96) moveToward(u, target.x, target.y, 0.55, target);
+    else { // 사거리 안: 미세 궤도만
+      const ang = Math.atan2(target.y - u.y, target.x - u.x), sp = Math.max(28, u.speed * 0.14), side = u._sidestep;
+      u.desVx = -Math.sin(ang) * side * sp; u.desVy = Math.cos(ang) * side * sp;
+    }
+    u.cd -= dt;
+    tickTelegraph(u, target);
+    let guard = 0;
+    while (u.cd <= 0 && target.alive && u.alive && guard++ < 20) { performAttack(u, target); u.cd += u.atkSpeed; }
+  } else {
+    clearTelegraph(u);
+    u._outT += dt; if (u._outT > 0.45) u._engaged = false;
+    u.cd = Math.max(0, u.cd - dt);
+    moveToward(u, target.x, target.y, 1, target);
   }
 }
-// 근접 공격 예고: 빨간 120° 부채꼴이 차오르다가 공격 순간 번쩍인다 (전작과 같은 연출)
-function tgEl(u) { if (!u.tg) { u.tg = document.createElement('div'); u.tg.className = 'tg'; $('field').appendChild(u.tg); } return u.tg; }
-function tgStyle(el, u, t, alpha) {
-  const reach = Math.max(u.range, CFG.UNIT_R * 2 + 6) + CFG.UNIT_R * 0.5, a = Math.atan2(t.y - u.y, t.x - u.x) * 180 / Math.PI;
-  el.style.left = u.x + 'px'; el.style.top = u.y + 'px'; el.style.width = el.style.height = reach * 2 + 'px';
-  el.style.background = `conic-gradient(from ${(a + 90 - 60).toFixed(1)}deg, rgba(229,50,45,${(0.12 + 0.33 * alpha).toFixed(2)}) 0 120deg, transparent 120deg)`;
+function performAttack(u, t) {
+  fireTelegraph(u); // 예고가 가득 찬 순간 = 공격 발동
+  if (u.el) { u.el.style.filter = 'brightness(1.3)'; setTimeout(() => u.el && (u.el.style.filter = ''), 120); }
+  if (u.melee) attackLunge(u, t);
+  const pct = u.nextHitPct || 100; u.nextHitPct = 0;
+  const dmg = effAtk(u) * pct / 100, opts = pct > 100 ? { skill: true } : {};
+  const hitOne = e => { const done = dealDamage(u, e, dmg, opts); if (done > 0 && u.def.onHit) u.def.onHit(u, e, A); return done; };
+  if (u.melee) { // 120° 부채꼴 광역 타격
+    const a0 = Math.atan2(t.y - u.y, t.x - u.x), half = Math.PI / 3, reach = Math.max(u.range + 8, bodySeparation(u, t) + 8);
+    spawnSlash(u, t);
+    let any = 0; foes(u).forEach(e => { if (inFan(u, e, a0, half, reach)) any += hitOne(e); });
+    afterHit(u, any);
+  } else launchProjectile(u, t, () => afterHit(u, hitOne(t)));
 }
-function showTg(u, t, alpha) { const el = tgEl(u); el.classList.remove('fire'); el.style.opacity = '1'; tgStyle(el, u, t, alpha); }
-function hideTg(u) { if (u.tg) u.tg.style.opacity = '0'; }
-function fireTg(u, t) { const el = tgEl(u); tgStyle(el, u, t, 1.4); el.classList.remove('fire'); void el.offsetWidth; el.classList.add('fire'); }
+// 부채꼴 명중 판정: 중심점이 아니라 몸(원)이 부채꼴에 걸치면 맞는다
+function inFan(caster, e, angle0, half, reach) {
+  const dx = e.x - caster.x, dy = e.y - caster.y, d = Math.hypot(dx, dy), r = unitRadius(e);
+  if (d - r > reach) return false;
+  if (d <= r) return true;
+  let ang = Math.atan2(dy, dx) - angle0;
+  while (ang > Math.PI) ang -= Math.PI * 2;
+  while (ang < -Math.PI) ang += Math.PI * 2;
+  return Math.abs(ang) <= half + Math.asin(Math.min(1, r / d));
+}
 
-function separate() { // 몸끼리 겹치지 않게
-  const L = S.units.filter(u => u.alive), R = CFG.UNIT_R * 2;
-  for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) {
-    const a = L[i], b = L[j], dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 0.01;
-    if (d < R) { const p = (R - d) / 2, nx = dx / d, ny = dy / d; a.x -= nx * p; a.y -= ny * p; b.x += nx * p; b.y += ny * p; }
+// ── 이동: 전작 moveToward (교전 거리 유지 · 옆걸음 · 겹침 회피 · 전방 장애물 우회) ──
+function moveToward(u, tx, ty, mul, tgt) {
+  const angle = Math.atan2(ty - u.y, tx - u.x);
+  const sp = Math.max(35, u.speed * (mul || 1));
+  let vx = Math.cos(angle) * sp, vy = Math.sin(angle) * sp;
+  if (tgt && tgt.alive) {
+    const dT = Math.hypot(tgt.x - u.x, tgt.y - u.y) || 0.001, hold = holdDist(u, tgt), maxR = attackDist(u), side = u._sidestep;
+    if (dT < hold) {
+      const back = (hold - dT) / hold;
+      vx = -Math.cos(angle) * sp * (0.28 + back * 0.55); vy = -Math.sin(angle) * sp * (0.28 + back * 0.55);
+      vx += -Math.sin(angle) * side * sp * 0.22; vy += Math.cos(angle) * side * sp * 0.22;
+    } else if (dT <= maxR) { vx = -Math.sin(angle) * side * sp * 0.1; vy = Math.cos(angle) * side * sp * 0.1; }
   }
-  const W = FW(), H = FH(), r = CFG.UNIT_R;
-  L.forEach(u => { u.x = clamp(u.x, r, W - r); u.y = clamp(u.y, r, H - r); });
+  const fx = Math.cos(angle), fy = Math.sin(angle), look = 58;
+  let sx = 0, sy = 0, avoidX = 0, avoidY = 0, avoidW = 0;
+  S.units.forEach(o => {
+    if (o === u || o === tgt || !o.alive) return;
+    const dx = u.x - o.x, dy = u.y - o.y, d = Math.hypot(dx, dy) || 0.001, need = bodySeparation(u, o) + 6;
+    if (d < need) { const w = (need - d) / need; sx += (dx / d) * w; sy += (dy / d) * w; }
+    if (d < look) { // 전방 장애물 우회 (속도에 섞어 떨림 없이)
+      const ahead = -(dx * fx + dy * fy) / d;
+      if (ahead > 0.08) {
+        const cross = fy * dx - fx * dy, side = Math.abs(cross) < 0.001 * d ? u._sidestep : (cross > 0 ? -1 : 1), w = (1 - d / look) * ahead;
+        avoidX += -fy * side * w; avoidY += fx * side * w; avoidW += w;
+      }
+    }
+  });
+  vx += sx * sp * 0.85; vy += sy * sp * 0.85;
+  if (avoidW > 0) { vx += avoidX * sp * 0.7; vy += avoidY * sp * 0.7; }
+  const vm = Math.hypot(vx, vy); if (vm > sp && vm > 0) { vx *= sp / vm; vy *= sp / vm; }
+  u.desVx = vx; u.desVy = vy;
+}
+
+// ── 물리: 전작 physIntegrate · physSolvePair · physWalls ──
+function physIntegrate(u, dt) {
+  if (!u.alive) return;
+  const frozen = u.st.freeze > 0, stunned = u.st.stun > 0;
+  const desX = frozen || stunned ? 0 : u.desVx, desY = frozen || stunned ? 0 : u.desVy;
+  const k = 1 - Math.exp(-(frozen ? 22 : stunned ? 5 : PHYS.STEER) * dt);
+  u.vx += (desX - u.vx) * k; u.vy += (desY - u.vy) * k;
+  const drag = Math.exp(-PHYS.DRAG * (frozen ? 3.2 : stunned ? 1.7 : 1) * dt);
+  u.vx *= drag; u.vy *= drag;
+  const sp = Math.hypot(u.vx, u.vy), max = frozen ? 80 : 420; if (sp > max) { u.vx *= max / sp; u.vy *= max / sp; }
+  u.x += u.vx * dt; u.y += u.vy * dt;
+}
+function physSolvePair(a, b) {
+  let dx = b.x - a.x, dy = b.y - a.y, dist2 = dx * dx + dy * dy;
+  let minDist = unitRadius(a) + unitRadius(b) + PHYS.SKIN;
+  if (a._engaged && b._engaged && a.side !== b.side) minDist = unitRadius(a) + unitRadius(b) + 1.2; // 교전 중인 적끼리는 살짝 더 붙는다
+  if (dist2 > minDist * minDist && dist2 > 0.0001) return;
+  if (dist2 < 0.0001) { const ang = (a.uid & 1) ? 0.7 : 2.4; dx = Math.cos(ang) * 0.4; dy = Math.sin(ang) * 0.4; dist2 = dx * dx + dy * dy; }
+  const d = Math.sqrt(dist2), nx = dx / d, ny = dy / d;
+  const invA = a.invMass * (a.st.freeze > 0 ? 0.4 : 1), invB = b.invMass * (b.st.freeze > 0 ? 0.4 : 1), invSum = invA + invB;
+  if (invSum <= 1e-8) return;
+  const pen = minDist - d - PHYS.SLOP;
+  if (pen > 0) { const corr = pen * PHYS.POS_CORR / invSum; a.x -= nx * corr * invA; a.y -= ny * corr * invA; b.x += nx * corr * invB; b.y += ny * corr * invB; }
+  const rvx = a.vx - b.vx, rvy = a.vy - b.vy, relN = rvx * nx + rvy * ny; // 양수면 접근
+  if (relN > 0) {
+    const j = -(1 + PHYS.RESTITUTION) * relN / invSum;
+    a.vx += j * nx * invA; a.vy += j * ny * invA; b.vx -= j * nx * invB; b.vy -= j * ny * invB;
+    const tx = -ny, ty = nx, relT = rvx * tx + rvy * ty, maxF = Math.abs(j) * 0.9;
+    const jt = clamp(-relT * PHYS.FRICTION / invSum, -maxF, maxF);
+    a.vx += jt * tx * invA; a.vy += jt * ty * invA; b.vx -= jt * tx * invB; b.vy -= jt * ty * invB;
+  }
+}
+function resolveOverlaps() {
+  const L = S.units.filter(u => u.alive), n = L.length;
+  for (let it = 0; it < PHYS.SOLVER_ITERS; it++) for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) physSolvePair(L[i], L[j]);
+}
+function physWalls(u) {
+  const pad = Math.max(PHYS.WALL_PAD, unitRadius(u)), W = FW(), H = FH();
+  if (u.x < pad) { u.x = pad; if (u.vx < 0) u.vx *= -0.15; } else if (u.x > W - pad) { u.x = W - pad; if (u.vx > 0) u.vx *= -0.15; }
+  if (u.y < pad) { u.y = pad; if (u.vy < 0) u.vy *= -0.15; } else if (u.y > H - pad) { u.y = H - pad; if (u.vy > 0) u.vy *= -0.15; }
+}
+function physSnap(u, x, y) { // 순간이동: 속도 · 보간 초기화
+  const pad = Math.max(PHYS.WALL_PAD, unitRadius(u));
+  u.x = clamp(x, pad, FW() - pad); u.y = clamp(y, pad, FH() - pad); u.xPrev = u.x; u.yPrev = u.y; u.vx = u.vy = u.desVx = u.desVy = 0; physSyncDom(u, 1);
+}
+function physSyncDom(u, alpha) { // 물리 스텝 사이를 보간해서 그린다
+  if (!u.el) return;
+  const x = u.xPrev + (u.x - u.xPrev) * alpha, y = u.yPrev + (u.y - u.yPrev) * alpha;
+  const xs = x.toFixed(1) + 'px', ys = y.toFixed(1) + 'px';
+  if (u.el.style.left !== xs) u.el.style.left = xs;
+  if (u.el.style.top !== ys) u.el.style.top = ys;
+}
+
+// ── 공격 예고(텔레그래프): 공격 직전 최대 1초 동안 범위를 붉게 띄우고, 왼쪽부터 색이 차올라 가득 차면 공격 (전작 그대로) ──
+const TG_MAX = 1.0, TG_MIN_INTERVAL = 0.5; // 예고 최대 길이 · 이보다 짧은 연사형은 예고 없이
+function telegraphSpec(u) { return u.melee ? { shape: 'fan', half: Math.PI / 3, reach: Math.max(u.range, unitRadius(u) * 2 + 8) } : null; } // 모든 근접: 120° 부채꼴
+function telegraphWindup(u, spec) { if (!spec || !(u.atkSpeed >= TG_MIN_INTERVAL)) return 0; return Math.min(TG_MAX, u.atkSpeed * 0.85); } // 공격 간격의 85% 까지
+function telegraphShape(spec, Sz, angle) {
+  const c = Sz / 2, R = spec.reach, a1 = angle - spec.half, a2 = angle + spec.half;
+  const x1 = c + Math.cos(a1) * R, y1 = c + Math.sin(a1) * R, x2 = c + Math.cos(a2) * R, y2 = c + Math.sin(a2) * R;
+  let minX = c, maxX = c;
+  for (let i = 0; i <= 16; i++) { const x = c + Math.cos(a1 + (a2 - a1) * i / 16) * R; if (x < minX) minX = x; if (x > maxX) maxX = x; }
+  return { d: `M ${c} ${c} L ${x1} ${y1} A ${R} ${R} 0 ${spec.half * 2 > Math.PI ? 1 : 0} 1 ${x2} ${y2} Z`, minX, maxX };
+}
+function tickTelegraph(u, aim) {
+  const spec = telegraphSpec(u), windup = telegraphWindup(u, spec);
+  if (!spec || windup <= 0) { clearTelegraph(u); return; }
+  const cd = Math.max(0, u.cd);
+  if (cd > windup) { clearTelegraph(u); return; }
+  const p = clamp(1 - cd / windup, 0, 1), R = spec.reach, Sz = R * 2 + 12;
+  let tg = u.tg;
+  if (!tg || tg.R !== R) {
+    clearTelegraph(u);
+    const el = document.createElement('div');
+    el.className = 'fx-telegraph'; el.style.width = el.style.height = Sz + 'px';
+    el.innerHTML = `<svg class="tg-layer tg-base" viewBox="0 0 ${Sz} ${Sz}"><path d=""/></svg><svg class="tg-layer tg-fill" viewBox="0 0 ${Sz} ${Sz}"><path d=""/></svg>`;
+    $('field').appendChild(el);
+    tg = u.tg = { el, R, Sz, paths: el.querySelectorAll('path'), fill: el.querySelector('.tg-fill'), angle: null, minX: 0, maxX: Sz };
+  }
+  tg.el.style.left = u.x + 'px'; tg.el.style.top = u.y + 'px';
+  let angle = tg.angle == null ? 0 : tg.angle; // 부채꼴은 매 프레임 대상 쪽으로 다시 조준
+  if (aim) { const dx = aim.x - u.x, dy = aim.y - u.y; if (dx || dy) angle = Math.atan2(dy, dx); }
+  if (tg.angle == null || Math.abs(angle - tg.angle) > 0.002) { const sh = telegraphShape(spec, Sz, angle); tg.paths.forEach(pa => pa.setAttribute('d', sh.d)); tg.angle = angle; tg.minX = sh.minX; tg.maxX = sh.maxX; }
+  if (p >= 1) tg.fill.style.clipPath = 'none'; // 왼쪽 끝 → 오른쪽 끝으로 차오르는 와이프
+  else { const edge = tg.minX + p * (tg.maxX - tg.minX); tg.fill.style.clipPath = `inset(0 ${((Sz - edge) / Sz * 100).toFixed(2)}% 0 0)`; }
+}
+function fireTelegraph(u) { const tg = u.tg; if (!tg) return; tg.fill.style.clipPath = 'none'; tg.el.classList.add('fired'); u.tg = null; setTimeout(() => tg.el.remove(), 220); } // 가득 찬 색이 번쩍이며 사라진다
+function clearTelegraph(u) { if (u.tg) { u.tg.el.remove(); u.tg = null; } }
+
+// ── 이펙트: 찌르기 · 베기 · 투사체 · 피해 숫자 · 피격 · 사망 (전작 그대로) ──
+function attackLunge(u, t) { // 공격 순간 대상 쪽으로 살짝 찌르는 모션 (개별 translate 속성이라 위치용 transform 과 충돌하지 않음)
+  if (!u.el || !u.el.animate) return;
+  const dx = t.x - u.x, dy = t.y - u.y, d = Math.hypot(dx, dy) || 1;
+  u.el.animate([{ translate: '0px 0px' }, { translate: `${dx / d * 7}px ${dy / d * 7}px`, offset: 0.4 }, { translate: '0px 0px' }], { duration: 200, easing: 'ease-out' });
+}
+function spawnSlash(u, t) {
+  const rad = Math.atan2(t.y - u.y, t.x - u.x), el = document.createElement('div');
+  el.className = 'fx-slash';
+  el.style.left = (u.x + Math.cos(rad) * 24) + 'px'; el.style.top = (u.y + Math.sin(rad) * 24) + 'px';
+  el.style.transform = `translate(-50%, -50%) rotate(${rad * 180 / Math.PI}deg)`;
+  el.innerHTML = '<svg viewBox="0 0 54 54"><path d="M 8 40 Q 27 8 46 24"/></svg>';
+  $('field').appendChild(el); setTimeout(() => el.remove(), 260);
+}
+function launchProjectile(u, t, onHit) { // 추적 투사체: 0.2초 안에 닿는 속도 (최소 900px/s)
+  if (!u.alive || !t.alive) return;
+  const el = document.createElement('div'); el.className = 'fx-projectile';
+  el.style.left = u.x + 'px'; el.style.top = u.y + 'px'; el.style.color = el.style.background = u.def.color || '#333';
+  $('field').appendChild(el);
+  S.shots.push({ caster: u, target: t, x: u.x, y: u.y, speed: Math.max(900, dist(u, t) / 0.2), remaining: 1.2, el, onHit });
 }
 function stepShots(dt) {
-  S.shots = S.shots.filter(s => {
-    const t = s.t; if (!t.alive) { s.el.remove(); return false; }
-    const d = Math.hypot(t.x - s.x, t.y - s.y), step = 900 * dt;
-    if (d <= step + 8) { s.el.remove(); s.onHit(); return false; }
-    s.x += (t.x - s.x) / d * step; s.y += (t.y - s.y) / d * step; s.el.style.left = s.x + 'px'; s.el.style.top = s.y + 'px';
+  S.shots = S.shots.filter(p => {
+    if (!p.caster.alive || !p.target.alive) { p.el.remove(); return false; }
+    const dx = p.target.x - p.x, dy = p.target.y - p.y, d = Math.hypot(dx, dy), step = p.speed * dt;
+    p.remaining -= dt;
+    if (d <= step + unitRadius(p.target) || p.remaining <= 0) { p.el.remove(); p.onHit(); return false; }
+    p.x += dx / d * step; p.y += dy / d * step; p.el.style.left = p.x + 'px'; p.el.style.top = p.y + 'px';
     return true;
   });
 }
+// 숫자 색: 내가 넣은 피해 흰색 · 상대가 넣은 피해 빨강 · 스킬 주황 · 화상 연빨강 · 회복 초록 · 글자 노랑
+function dmgNum(t, amount, opts = {}) {
+  const el = document.createElement('div'), isNum = typeof amount === 'number';
+  let kind = '';
+  if (isNum) kind = opts.heal ? ' num-heal' : opts.critHit ? ' crit-hit' : opts.dot ? ' num-burn' : t.side === 'a' ? ' num-theirs' : ' num-mine';
+  el.className = 'fx-damage-num' + (isNum ? ' num' : (opts.crit ? ' crit-like' : '') + (opts.heal ? ' heal-like' : '')) + kind;
+  el.textContent = isNum ? (opts.critHit ? '💥' : '') + (opts.heal ? '+' : '-') + amount + (opts.dot ? '🔥' : '') : amount;
+  el.style.left = (t.x + (Math.random() * 16 - 8)) + 'px'; el.style.top = (t.y - 12) + 'px'; // 연출용 난수 (전투 시드와 무관)
+  $('field').appendChild(el); setTimeout(() => el.remove(), 700);
+}
+function floatText(u, text) { dmgNum(u, String(text), { crit: true }); }
+function hitFlash(t, big) {
+  if (!t.el) return;
+  t.el.classList.add('hit-flash'); if (big) t.el.classList.add('hit-flash-big');
+  setTimeout(() => t.el && t.el.classList.remove('hit-flash', 'hit-flash-big'), 220);
+}
+function spawnDeathEffect(u) {
+  const wrap = document.createElement('div');
+  wrap.className = 'fx-death-fx'; wrap.style.left = u.x + 'px'; wrap.style.top = u.y + 'px';
+  wrap.style.setProperty('--death-color', u.def.color || '#999');
+  let html = '<div class="death-ring"></div>';
+  for (let i = 0; i < 7; i++) { const ang = Math.PI * 2 * i / 7 + (Math.random() * 0.5 - 0.25), d = 26 + Math.random() * 18; html += `<div class="death-shard" style="--dx:${(Math.cos(ang) * d).toFixed(1)}px;--dy:${(Math.sin(ang) * d).toFixed(1)}px;--rot:${(Math.random() * 360 - 180).toFixed(0)}deg"></div>`; }
+  wrap.innerHTML = html; $('field').appendChild(wrap); setTimeout(() => wrap.remove(), 2100);
+}
+
+// ── 전투 한 스텝 (전작 physicsStep 순서: 상태 → 조향 · 공격 → 투사체 → 적분 → 충돌 해소 → 벽) ──
 function stepCombat(dt) {
   if (!S.started) { S.started = true; S.units.forEach(u => u.def.onStart && u.def.onStart(u, A)); }
   S.time += dt;
+  for (const u of S.units) if (u.alive) { u.xPrev = u.x; u.yPrev = u.y; }
   S.units.slice().forEach(u => stepUnit(u, dt));
-  stepShots(dt); separate();
-  S.units.forEach(u => { if (u.el) { u.el.style.left = u.x + 'px'; u.el.style.top = u.y + 'px'; } });
+  stepShots(dt);
+  for (const u of S.units) physIntegrate(u, dt);
+  resolveOverlaps();
+  for (const u of S.units) if (u.alive) physWalls(u);
   const a = S.units.some(u => u.alive && u.side === 'a'), e = S.units.some(u => u.alive && u.side === 'e');
   if (!a || !e) return endRound(a ? 'a' : e ? 'e' : 'draw');
   if (S.time >= CFG.ROUND_TIME) { const hp = s => S.units.filter(u => u.alive && u.side === s).reduce((t, u) => t + u.hp / u.maxHp, 0); const ha = hp('a'), he = hp('e'); return endRound(ha > he ? 'a' : he > ha ? 'e' : 'draw'); }
@@ -490,33 +794,41 @@ function loop(ts) {
   const speed = S.time >= CFG.FAST_AFTER ? 2 : 1; // 15초 뒤 자동 2배속
   $('hudSpeed').hidden = speed === 1;
   acc += real * speed;
-  while (acc >= CFG.STEP && S.phase === 'combat') { acc -= CFG.STEP; stepCombat(CFG.STEP); }
+  let n = 0; while (acc >= CFG.STEP && S.phase === 'combat' && n++ < 30) { acc -= CFG.STEP; stepCombat(CFG.STEP); }
+  const alpha = clamp(acc / CFG.STEP, 0, 1); S.units.forEach(u => physSyncDom(u, alpha));
   $('hudTimer').textContent = Math.max(0, Math.ceil(CFG.ROUND_TIME - S.time)) + '초';
   if (S.phase === 'combat') requestAnimationFrame(loop);
 }
 
-// 유닛 그리기
+// ── 유닛 그리기 (전작 .unit 구조: 초상화 · 레벨 · 상태 아이콘 · 체력/쿨/쉴드 바) ──
 function drawUnit(u) {
   if (!u.el) return;
-  const sk = u.def.skill || {}, el = u.el;
-  el.classList.toggle('dead', !u.alive);
-  el.classList.toggle('frozen', u.st.freeze > 0); el.classList.toggle('stunned', u.st.stun > 0);
-  el.querySelector('.bar.hp i').style.width = (u.hp / u.maxHp * 100) + '%';
-  const sh = el.querySelector('.bar.sh'); sh.classList.toggle('zero', !(u.maxShield > 0 && u.shield > 0)); sh.querySelector('i').style.width = (u.maxShield ? u.shield / u.maxShield * 100 : 0) + '%';
-  const g = el.querySelector('.bar.gauge'); if (g) g.querySelector('i').style.width = (sk.type === 'cooldown' ? u.sk / sk.cd : u.sk / sk.need) * 100 + '%';
-  el.classList.toggle('stealth', u.st.stealth > 0);
-  el.querySelector('.st').textContent = Object.keys(STATUS).filter(k => u.st[k] > 0).map(k => STATUS[k].icon).join('');
+  const el = u.el, sk = u.def.skill;
+  const b = u.bars || (u.bars = { hp: el.querySelector('.unit-hpbar'), tx: el.querySelector('.unit-hp-text'), sh: el.querySelector('.unit-shieldbar'), cd: el.querySelector('.unit-cdbar'), st: el.querySelector('.status-icons') });
+  b.hp.style.width = clamp(u.hp / u.maxHp * 100, 0, 100).toFixed(1) + '%';
+  b.tx.textContent = Math.max(0, Math.round(u.hp));
+  if (u.maxShield > 0) b.sh.style.width = clamp(u.shield / u.maxShield * 100, 0, 100).toFixed(1) + '%';
+  if (b.cd && sk) b.cd.style.width = clamp((sk.type === 'cooldown' ? u.sk / sk.cd : u.sk / sk.need) * 100, 0, 100).toFixed(1) + '%';
+  el.classList.toggle('frozen', u.st.freeze > 0); el.classList.toggle('stunned', u.st.stun > 0); el.classList.toggle('stealthed', u.st.stealth > 0);
+  const icons = Object.keys(STATUS).filter(k => u.st[k] > 0).map(k => `<span title="${STATUS[k].name}">${STATUS[k].icon}</span>`).join('');
+  if (b.st._v !== icons) { b.st._v = icons; b.st.innerHTML = icons; }
 }
 function unitEl(u) {
-  const el = document.createElement('div'); el.className = 'unit' + (u.side === 'e' ? ' enemy' : '');
-  const sk = u.def.skill, gauge = sk ? `<div class="bar gauge ${sk.type === 'cooldown' ? 'cd' : 'sk'}"><i></i></div>` : '';
-  el.innerHTML = `${pic(u.id)}<span class="lv">${u.lv}</span><span class="st"></span><div class="bars"><div class="bar hp"><i></i></div><div class="bar sh"><i></i></div>${gauge}</div>`;
+  const el = document.createElement('div'), sk = u.def.skill;
+  el.className = 'unit ' + (u.side === 'e' ? 'enemy' : 'ally') + (u.lv > 1 ? ' lvl' + u.lv : '') + (sk ? ' has-cd' : '') + (u.maxShield > 0 ? ' has-shield' : '');
+  el.innerHTML = `<span class="unit-icon">${pic(u.id)}</span><span class="unit-level">${u.lv}</span><div class="status-icons"></div>`
+    + `<div class="unit-hpbar-wrap"><div class="unit-hpbar-track"><div class="unit-hpbar"></div></div><span class="unit-hp-text">${u.maxHp}</span></div>`
+    + (sk ? `<div class="unit-cdbar-wrap"><div class="unit-cdbar ${sk.type === 'cooldown' ? 'cd' : 'sk'}"></div></div>` : '')
+    + '<div class="unit-shieldbar-wrap"><div class="unit-shieldbar"></div></div>';
   el.style.left = u.x + 'px'; el.style.top = u.y + 'px';
   return el;
 }
-function floatText(u, text, cls) { const f = document.createElement('div'); f.className = 'dmg ' + (cls || ''); f.textContent = text; f.style.left = (u.x - 10 + (rng() - 0.5) * 20) + 'px'; f.style.top = (u.y - 44) + 'px'; $('field').appendChild(f); setTimeout(() => f.remove(), 800); }
-function flash(u) { if (!u.el) return; u.el.classList.add('hit'); setTimeout(() => u.el && u.el.classList.remove('hit'), 90); }
-function fitField() { const W = FW() + 6, H = FH() + 6, w = $('fieldWrap').clientWidth, s = Math.max(0.4, Math.min(1.6, w / W, (window.innerHeight - 250) / H)); $('field').style.transform = `scale(${s})`; $('fieldWrap').style.height = (H * s) + 'px'; }
+function fitField() {
+  const f = $('field'), W = FW() + 6, H = FH() + 6;
+  f.style.width = FW() + 'px'; f.style.height = FH() + 'px';
+  const s = Math.max(0.25, Math.min(1, $('fieldWrap').clientWidth / W, (window.innerHeight - 230) / H));
+  f.style.transform = `scale(${s})`; $('fieldWrap').style.height = (H * s) + 'px';
+}
 window.addEventListener('resize', () => { if (S.phase !== 'idle') fitField(); });
 
 // ═════════ 라운드 · 배치 ═════════
@@ -551,11 +863,11 @@ function renderHand() {
 function renderField() {
   const f = $('field'); f.innerHTML = '';
   ['a', 'e'].forEach(side => S.tiles[side].forEach((list, t) => {
-    const { x, y } = tileXY(side, t), C = CFG.CELL;
+    const { x, y } = tileXY(side, t), C = CFG.TILE;
     const tile = document.createElement('div'); tile.className = 'tile ' + (side === 'a' ? 'ally' : 'enemy'); tile.dataset.side = side; tile.dataset.tile = t;
     tile.style.left = (x - C / 2) + 'px'; tile.style.top = (y - C / 2) + 'px'; f.appendChild(tile);
     list.forEach((it, k) => {
-      const u = makeUnit(side, it.id, it.lv, x + (list.length > 1 ? (k ? 9 : -9) : 0), y + (list.length > 1 ? (k ? 6 : -6) : 0));
+      const u = makeUnit(side, it.id, it.lv, x + (list.length > 1 ? (k ? 14 : -14) : 0), y + (list.length > 1 ? (k ? 10 : -10) : 0));
       const el = unitEl(u); el.dataset.side = side; el.dataset.tile = t; if (side === 'a') el.style.touchAction = 'none';
       if (list.length > 1 && k === 1) el.insertAdjacentHTML('beforeend', '<span class="stack2">×2</span>');
       f.appendChild(el); u.el = el; drawUnit(u);
@@ -644,7 +956,7 @@ function startCombat() {
   S.units = [];
   ['a', 'e'].forEach(side => S.tiles[side].forEach((list, t) => list.forEach((it, k) => {
     const { x, y } = tileXY(side, t);
-    const u = makeUnit(side, it.id, it.lv, x + (list.length > 1 ? (k ? 9 : -9) : 0), y + (list.length > 1 ? (k ? 6 : -6) : 0));
+    const u = makeUnit(side, it.id, it.lv, x + (list.length > 1 ? (k ? 14 : -14) : 0), y + (list.length > 1 ? (k ? 10 : -10) : 0));
     u.el = unitEl(u); f.appendChild(u.el); drawUnit(u); S.units.push(u);
   })));
   banner('전투 시작!');
@@ -652,7 +964,7 @@ function startCombat() {
 }
 function endRound(w) {
   S.phase = 'roundEnd';
-  S.shots.forEach(s => s.el.remove()); S.shots = []; S.units.forEach(u => { if (u.tg) { u.tg.remove(); u.tg = null; } });
+  S.shots.forEach(s => s.el.remove()); S.shots = []; S.units.forEach(clearTelegraph);
   if (w === 'a') S.lives.e--; else if (w === 'e') S.lives.a--;
   renderLives();
   banner(w === 'a' ? '라운드 승리!' : w === 'e' ? '라운드 패배' : '무승부');

@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="2.2"><meta name="jhbt2-build" content="3"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="2.2"><meta name="jhbt2-build" content="4"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -151,6 +151,7 @@ a { color:inherit; }
 /* 접속 로딩 (인트로) */
 #boot { position:fixed; inset:0; z-index:300; background:var(--dark); color:var(--paper); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:26px; padding:24px; transition:opacity .45s ease; }
 #boot.out { opacity:0; pointer-events:none; }
+#boot .bver { font:800 12px var(--mono); letter-spacing:.3em; color:#8f8f8c; }
 #boot .bl { font:900 clamp(56px, 12vw, 104px) var(--display); letter-spacing:-.05em; line-height:.9; text-align:center; animation:slam .7s cubic-bezier(.2,.8,.2,1) both; }
 #boot .bl small { display:block; font:800 11px var(--mono); letter-spacing:.4em; color:#8f8f8c; margin-bottom:14px; }
 #boot .chars { display:flex; gap:10px; }
@@ -842,7 +843,7 @@ input.text::placeholder { color:#555; }
 <div id="intro"></div>
 <div id="lifeFx"></div>
 <div class="modal" id="charModal"><div class="box cdp" id="charBox"></div></div>
-<div id="boot"><div class="bl"><small>JIHOO BATTLE 2</small>지후배틀<br>2</div><div class="chars" id="bootChars"></div><div class="ldbar"><i id="bootBar"></i></div><div class="ldmsg" id="bootMsg">지후 깨우는 중</div><div class="ldpct" id="bootPct">0%</div></div>
+<div id="boot"><div class="bl"><small>JIHOO BATTLE 2</small>지후배틀<br>2</div><div class="chars" id="bootChars"></div><div class="ldbar"><i id="bootBar"></i></div><div class="ldmsg" id="bootMsg">지후 깨우는 중</div><div class="ldpct" id="bootPct">0%</div><div class="bver" id="bootVer"></div></div>
 <div id="matchLoad"><span class="eyebrow">NORMAL MATCH</span><h2>일반전 준비중</h2><div class="ldbar"><i id="mlBar"></i></div><div class="tip" id="mlTip"></div></div>
 <div class="modal" id="statsModal"><div class="box"><div class="ms-head"><h3>경기 통계</h3><span class="sp"></span><button class="btn" id="btnStatsClose">닫기</button></div><div id="msTabs"></div><div id="msBody"></div></div></div>
 <div class="modal" id="menuModal"><div class="drawer"><div class="dh">MENU<button class="btn" data-close="menuModal">✕</button></div>
@@ -3134,6 +3135,7 @@ const UPDATE_CHECK_MS = 5 * 60 * 1000;
 let pendingUpdateVersion = null;
 function gameVersion() { return document.querySelector('meta[name="jhbt2-version"]')?.content || '0'; }
 function gameBuild() { return Number(document.querySelector('meta[name="jhbt2-build"]')?.content) || 0; }
+{ const bv = $('bootVer'); if (bv) bv.textContent = 'v' + gameVersion() + (gameBuild() > 1 ? '.' + gameBuild() : ''); } // 시작 화면에 현재 버전
 function compareVersions(a, b) { return String(a).localeCompare(String(b), undefined, { numeric: true }); }
 async function fetchDeployedVersion() {
   if (location.protocol === 'file:') return null;

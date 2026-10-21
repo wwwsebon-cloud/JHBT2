@@ -8,14 +8,14 @@ import sys
 
 from PIL import Image
 
-CHROME = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
+CHROME = os.environ.get('CHROME') or (r'C:\Program Files\Google\Chrome\Application\chrome.exe' if os.name == 'nt' else '/opt/pw-browsers/chromium/chrome-linux/chrome')
 
 
 def main():
     src = os.path.abspath(sys.argv[1])
     png = os.path.splitext(src)[0] + '.png'
     url = 'file:///' + src.replace('\\', '/')
-    subprocess.run([CHROME, '--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1',
+    subprocess.run([CHROME, "--no-sandbox", '--headless=new', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1',
                     '--window-size=1080,5000', '--virtual-time-budget=8000', '--screenshot=' + png, url], capture_output=True)
     im = Image.open(png).convert('RGB')
     w, h = im.size

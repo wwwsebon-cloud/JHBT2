@@ -7,7 +7,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="jhbt2-version" content="0.9.0"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
+<meta name="jhbt2-version" content="0.9.1"><meta name="jhbt2-build" content="0"><!-- 잠수함 패치(버전 그대로)마다 build +1 → 열려 있는 화면도 새로고침을 받는다 -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>지후배틀 2 BETA</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -433,7 +433,7 @@ input.text::placeholder { color:#555; }
 .phase { display:flex; align-items:center; gap:8px; font:800 11px var(--mono); color:#666; letter-spacing:.1em; white-space:nowrap; }
 .phase i { width:6px; height:6px; border-radius:50%; background:#111; animation:blinkDot 1s infinite; }
 .fieldwrap { position:relative; width:calc(100% - 36px); max-width:1100px; margin:10px auto 0; } /* 높이 · 카메라는 아래 '카메라' 참고 */
-#field { position:relative; transform-origin:0 0; background:#fff repeating-linear-gradient(90deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px), repeating-linear-gradient(0deg, transparent 0 59px, rgba(0,0,0,.05) 59px 60px); border:1px solid #111; border-radius:14px; overflow:hidden; }
+#field { position:relative; transform-origin:0 0; background:#fff repeating-linear-gradient(90deg, transparent 0 74px, rgba(0,0,0,.05) 74px 75px), repeating-linear-gradient(0deg, transparent 0 74px, rgba(0,0,0,.05) 74px 75px); border:1px solid #111; border-radius:14px; overflow:hidden; }
 #field::after { content:''; position:absolute; left:50%; top:0; bottom:0; border-left:2px dashed rgba(0,0,0,.22); }
 #field.ns::after { left:0; right:0; top:50%; bottom:auto; border-left:0; border-top:2px dashed rgba(0,0,0,.22); }
 #field .tile { position:absolute; width:120px; height:120px; box-sizing:border-box; border:1px dashed rgba(0,0,0,.2); border-radius:14px; background:rgba(0,0,0,.015); transition:background-color .15s, border-color .15s; }
@@ -461,26 +461,26 @@ input.text::placeholder { color:#555; }
 .hodds b { color:#111; }
 #btnSpeed.on { background:#111; color:#fff; }
 /* 유닛 — 전작 JHBT 의 .unit 구조 그대로 · 흑백 (적은 빨간 테두리) */
-.unit { position:absolute; width:74px; height:74px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; border:3px solid #111; background:#fff; box-shadow:0 0 0 3px #fff, 0 8px 16px -6px rgba(0,0,0,.45); transform:translate(-50%,-50%); transition:filter .15s ease, width .25s ease, height .25s ease; will-change:left, top; z-index:5; user-select:none; }
+.unit { position:absolute; width:93px; height:93px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; border:3px solid #111; background:#fff; box-shadow:0 0 0 3px #fff, 0 8px 16px -6px rgba(0,0,0,.45); transform:translate(-50%,-50%); transition:filter .15s ease, width .25s ease, height .25s ease; will-change:left, top; z-index:5; user-select:none; }
 .unit.enemy { border-color:#e5322d; }
-.unit.lvl2 { width:80px; height:80px; } .unit.lvl3 { width:86px; height:86px; } .unit.lvl4 { width:92px; height:92px; } .unit.lvl5 { width:98px; height:98px; } .unit.lvl6 { width:104px; height:104px; }
+.unit.lvl2 { width:100px; height:100px; } .unit.lvl3 { width:108px; height:108px; } .unit.lvl4 { width:115px; height:115px; } .unit.lvl5 { width:123px; height:123px; } .unit.lvl6 { width:130px; height:130px; } /* 전작 74px · +6 의 1.25배 */
 .unit .unit-icon { position:absolute; inset:0; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; }
 .unit .unit-icon img { width:100%; height:100%; object-fit:cover; }
-.unit .unit-level { position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border-radius:50%; background:#111; color:#fff; font:900 11px var(--mono); display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:6; }
+.unit .unit-level { position:absolute; bottom:-2px; right:-2px; width:28px; height:28px; border-radius:50%; background:#111; color:#fff; font:900 14px var(--mono); display:flex; align-items:center; justify-content:center; border:2px solid #fff; z-index:6; }
 .unit.enemy .unit-level { background:#e5322d; }
-.unit .status-icons { position:absolute; top:-16px; left:50%; transform:translateX(-50%); display:flex; gap:2px; font-size:12px; z-index:6; white-space:nowrap; }
-.unit .status-icons span { background:#111; color:#fff; border-radius:9px; min-width:18px; height:18px; padding:0 2px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:900; }
-.unit .unit-hpbar-wrap { position:absolute; bottom:-17px; left:50%; transform:translateX(-50%); }
-.unit .unit-hpbar-track { position:relative; width:84px; height:14px; background:rgba(17,17,17,.82); border-radius:4px; overflow:hidden; box-shadow:0 0 0 1px #fff; }
+.unit .status-icons { position:absolute; top:-20px; left:50%; transform:translateX(-50%); display:flex; gap:2px; font-size:12px; z-index:6; white-space:nowrap; }
+.unit .status-icons span { background:#111; color:#fff; border-radius:11px; min-width:22px; height:22px; padding:0 3px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; }
+.unit .unit-hpbar-wrap { position:absolute; bottom:-21px; left:50%; transform:translateX(-50%); }
+.unit .unit-hpbar-track { position:relative; width:105px; height:18px; background:rgba(17,17,17,.82); border-radius:5px; overflow:hidden; box-shadow:0 0 0 1px #fff; }
 .unit .unit-hpbar { height:100%; width:100%; background:#f2f2f0; }
 .unit.enemy .unit-hpbar { background:#e5322d; }
-.unit .unit-hp-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:900; color:#fff; -webkit-text-stroke:2.5px rgba(0,0,0,.85); paint-order:stroke fill; letter-spacing:.3px; line-height:1; white-space:nowrap; }
-.unit .unit-cdbar-wrap { position:absolute; bottom:-24px; left:50%; transform:translateX(-50%); width:84px; height:5px; background:rgba(0,0,0,.18); border-radius:3px; overflow:hidden; display:none; }
+.unit .unit-hp-text { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; color:#fff; -webkit-text-stroke:3px rgba(0,0,0,.85); paint-order:stroke fill; letter-spacing:.3px; line-height:1; white-space:nowrap; }
+.unit .unit-cdbar-wrap { position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); width:105px; height:6px; background:rgba(0,0,0,.18); border-radius:4px; overflow:hidden; display:none; }
 .unit.has-cd .unit-cdbar-wrap { display:block; }
-.unit.has-shield .unit-cdbar-wrap { bottom:-31px; }
+.unit.has-shield .unit-cdbar-wrap { bottom:-39px; }
 .unit .unit-cdbar { height:100%; width:0; background:#111; }
 .unit .unit-cdbar.cd { background:#8f8f8c; }
-.unit .unit-shieldbar-wrap { position:absolute; bottom:-24px; left:50%; transform:translateX(-50%); width:84px; height:5px; background:rgba(0,0,0,.18); border-radius:3px; overflow:hidden; display:none; }
+.unit .unit-shieldbar-wrap { position:absolute; bottom:-30px; left:50%; transform:translateX(-50%); width:105px; height:6px; background:rgba(0,0,0,.18); border-radius:4px; overflow:hidden; display:none; }
 .unit.has-shield .unit-shieldbar-wrap { display:block; }
 .unit .unit-shieldbar { height:100%; width:100%; background:#65cfff; }
 .unit.dead { opacity:0; transform:translate(-50%,-50%) scale(.3); pointer-events:none; }
@@ -755,7 +755,7 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // ═════════ CONFIG ═════════
 const CFG = {
-  CELL: 60,                                // 1칸 = 60px (전작 GRID) · 사거리 단위
+  CELL: 75,                                // 1칸 = 75px (전작 GRID 60 의 1.25배) · 사거리 · 이동 단위. 유닛 반지름도 이 비율로 커진다 (UNIT_R × CELL/45)
   COLS: 5, ROWS: 3,                        // 배치 칸: 진영마다 3줄(전열 · 중열 · 후열) × 5칸 (전작은 3 × 8)
   DEPTH: [0.60, 0.72, 0.84], ACROSS: [0.1, 0.9], // 전작 V42 칸 위치 (전장 비율)
   MAP_EW: [1760, 1120], MAP_NS: [1120, 1600],     // 전작 전장 크기 (가로 화면 · 세로 화면)
@@ -961,7 +961,7 @@ $('deckCards').addEventListener('click', e => { const card = e.target.closest('.
 // 전작의 수백 지후 특수 분기는 빼고 일반 경로만 남겼다. 지후별 능력은 CHARS 의 훅으로 얹는다.
 const S = { phase: 'idle' }; // 경기 상태
 let uidSeq = 0;
-const WS = CFG.CELL / 45; // 전작 WORLD_SCALE: 45px 격자 기준 수치 → 60px 격자
+const WS = CFG.CELL / 45; // 전작 WORLD_SCALE: 45px 격자 기준 수치 → 지금 격자 (유닛 반지름 · 몸 간격도 같은 비율)
 // 전장 방향: 모바일 · PC 상관없이 항상 가로 전장 (나는 왼쪽 · 상대는 오른쪽). 세로 전장은 좌표 버그 때문에 쓰지 않는다
 function isEW() { return true; }
 const FW = () => (isEW() ? CFG.MAP_EW : CFG.MAP_NS)[0], FH = () => (isEW() ? CFG.MAP_EW : CFG.MAP_NS)[1];
@@ -1154,7 +1154,7 @@ function moveToward(u, tx, ty, mul, tgt) {
       vx += -Math.sin(angle) * side * sp * 0.22; vy += Math.cos(angle) * side * sp * 0.22;
     } else if (dT <= maxR) { vx = -Math.sin(angle) * side * sp * 0.1; vy = Math.cos(angle) * side * sp * 0.1; }
   }
-  const fx = Math.cos(angle), fy = Math.sin(angle), look = 58;
+  const fx = Math.cos(angle), fy = Math.sin(angle), look = 58 * WS / (60 / 45); // 전작 58px (60px 격자 기준)
   let sx = 0, sy = 0, avoidX = 0, avoidY = 0, avoidW = 0;
   S.units.forEach(o => {
     if (o === u || o === tgt || !o.alive) return;

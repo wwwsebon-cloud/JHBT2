@@ -1,3 +1,10 @@
+# 지후배틀 2 (JHBT2) · 서비스 종료
+
+지후배틀 2는 서비스를 종료했고, 게임 · 화면은 **RE : 지후배틀** (저장소 `wwwsebon-cloud/JHBT`, https://jihoobattle.kr/) 로 이어집니다.
+`index.html` 은 종료 안내 페이지입니다. 마지막 게임 코드(v2.2)는 이 저장소의 git 기록(커밋 `25dc307`)에 있습니다.
+
+---
+
 # 지후배틀 2 (JHBT2) · v2.0
 
 index.html 하나가 게임 전체 (빌드 없음). 로컬 테스트: `python -m http.server 8766`
